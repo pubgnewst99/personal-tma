@@ -21,13 +21,24 @@ export default function ContentPage({ params }: { params: Promise<{ id: string }
     async function loadContent() {
       try {
         const item = await apiClient.getContentDetail(id);
+        
+        // Rewrite relative image paths (e.g., ./assets/image.jpg) to point to VPS API
+        // This is a simple regex approach that covers standard markdown image syntax
+        const rewrittenContent = item.content.replace(
+          /!\[(.*?)\]\(\.\/(.*?)\)/g,
+          (match, alt, relPath) => {
+            const assetUrl = apiClient.getAssetUrl(relPath, item.metadata.source as "bacaan" | "idea");
+            return `![${alt}](${assetUrl})`;
+          }
+        );
+
         setContentItem(item);
         
         const processedContent = await remark()
           .use(remarkParse)
           .use(remarkRehype)
           .use(html)
-          .process(item.content);
+          .process(rewrittenContent);
         
         setRenderedContent(processedContent.toString());
       } catch (err: any) {

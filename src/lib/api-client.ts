@@ -39,5 +39,13 @@ export const apiClient = {
       method: "PATCH",
       body: JSON.stringify({ id, checked, revision }),
       headers: { "Content-Type": "application/json" }
-    })
+    }),
+
+  getAssetUrl: (filePath: string, source: "bacaan" | "idea") => {
+    // Return the full URL for the asset serving endpoint
+    const url = new URL(`${API_BASE}/api/assets`, typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+    url.searchParams.set("path", filePath);
+    url.searchParams.set("source", source);
+    return url.toString();
+  }
 };
