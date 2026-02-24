@@ -11,6 +11,7 @@ export default function IdeaPage() {
   const [items, setItems] = useState<ContentMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"date" | "title">("title");
 
   useEffect(() => {
     apiClient.getContentList("idea")
@@ -19,13 +20,20 @@ export default function IdeaPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Group by folder
+  // Group by folder and sort
   const groups = items.reduce((acc, item) => {
     const folder = item.folder || "Uncategorized";
     if (!acc[folder]) acc[folder] = [];
     acc[folder].push(item);
     return acc;
   }, {} as Record<string, ContentMetadata[]>);
+
+  // Sort folders alphabetically
+  const sortedFolderNames = Object.keys(groups).sort((a, b) => {
+    if (a === "Uncategorized") return 1;
+    if (b === "Uncategorized") return -1;
+    return a.localeCompare(b);
+  });
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-8">
@@ -39,6 +47,20 @@ export default function IdeaPage() {
           </Link>
           <h1 className="text-2xl font-bold text-tg-text">Ideas</h1>
         </div>
+        <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-lg">
+          <button 
+            onClick={() => setSortBy("date")}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${sortBy === "date" ? "bg-white dark:bg-zinc-800 shadow-sm text-tg-text" : "text-tg-hint"}`}
+          >
+            Recent
+          </button>
+          <button 
+            onClick={() => setSortBy("title")}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${sortBy === "title" ? "bg-white dark:bg-zinc-800 shadow-sm text-tg-text" : "text-tg-hint"}`}
+          >
+            A-Z
+          </button>
+        </div>
       </header>
 
       {loading ? (
@@ -51,20 +73,29 @@ export default function IdeaPage() {
         </div>
       ) : (
         <div className="space-y-12">
-          {Object.keys(groups).length > 0 ? (
-            Object.entries(groups).map(([folder, folderItems]) => (
-              <section key={folder}>
-                <h2 className="text-xs uppercase tracking-widest font-bold text-accent mb-4 flex items-center gap-2">
-                  <Folder size={14} />
-                  {folder}
-                </h2>
-                <div className="space-y-1">
-                  {folderItems.map(item => (
-                    <FileCard key={item.id} item={item} />
-                  ))}
-                </div>
-              </section>
-            ))
+          {sortedFolderNames.length > 0 ? (
+            sortedFolderNames.map((folder) => {
+              const folderItems = [...groups[folder]].sort((a, b) => {
+                if (sortBy === "date") {
+                  return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
+                }
+                return a.title.localeCompare(b.title);
+              });
+
+              return (
+                <section key={folder}>
+                  <h2 className="text-xs uppercase tracking-widest font-bold text-accent mb-4 flex items-center gap-2">
+                    <Folder size={14} />
+                    {folder}
+                  </h2>
+                  <div className="space-y-1">
+                    {folderItems.map(item => (
+                      <FileCard key={item.id} item={item} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })
           ) : (
             <div className="py-20 text-center space-y-4">
               <div className="text-4xl">💡</div>
