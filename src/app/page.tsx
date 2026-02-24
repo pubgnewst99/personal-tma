@@ -1,3 +1,5 @@
+"use client";
+
 import { BookOpen, Lightbulb, CheckSquare } from "lucide-react";
 import CategoryCard from "@/components/CategoryCard";
 

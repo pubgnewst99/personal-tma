@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, Suspense } from "react";
 import { apiClient } from "@/lib/api-client";
 import { ContentMetadata } from "@/lib/indexer";
@@ -44,7 +46,7 @@ function IdeaContent() {
     <div className="max-w-3xl mx-auto px-6 py-8">
       <header className="mb-10 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link 
+          <Link
             href="/"
             className="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-tg-hint"
           >
@@ -58,13 +60,13 @@ function IdeaContent() {
           </div>
         </div>
         <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-lg">
-          <button 
+          <button
             onClick={() => setSortBy("date")}
             className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${sortBy === "date" ? "bg-white dark:bg-zinc-800 shadow-sm text-tg-text" : "text-tg-hint"}`}
           >
             Recent
           </button>
-          <button 
+          <button
             onClick={() => setSortBy("title")}
             className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${sortBy === "title" ? "bg-white dark:bg-zinc-800 shadow-sm text-tg-text" : "text-tg-hint"}`}
           >

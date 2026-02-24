@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, Suspense } from "react";
 import { apiClient } from "@/lib/api-client";
 import { ContentMetadata } from "@/lib/indexer";
@@ -9,7 +11,7 @@ import { useSearchParams } from "next/navigation";
 function BacaanContent() {
   const searchParams = useSearchParams();
   const initialTag = searchParams.get("tag");
-  
+
   const [items, setItems] = useState<ContentMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,7 @@ function BacaanContent() {
       <header className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link 
+            <Link
               href="/"
               className="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-tg-hint"
             >
@@ -48,13 +50,13 @@ function BacaanContent() {
             <h1 className="text-2xl font-bold text-tg-text">Bacaan</h1>
           </div>
           <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-lg">
-            <button 
+            <button
               onClick={() => setSortBy("date")}
               className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${sortBy === "date" ? "bg-white dark:bg-zinc-800 shadow-sm text-tg-text" : "text-tg-hint"}`}
             >
               Recent
             </button>
-            <button 
+            <button
               onClick={() => setSortBy("title")}
               className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${sortBy === "title" ? "bg-white dark:bg-zinc-800 shadow-sm text-tg-text" : "text-tg-hint"}`}
             >
