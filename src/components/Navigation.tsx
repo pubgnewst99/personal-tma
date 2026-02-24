@@ -20,7 +20,7 @@ export default function Navigation() {
         },
         {
             name: "Todo",
-            path: "/todos",
+            path: "/",
             icon: CheckSquare,
         },
     ];
