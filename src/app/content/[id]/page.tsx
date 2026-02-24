@@ -91,11 +91,15 @@ export default function ContentPage({ params }: { params: Promise<{ id: string }
           {contentItem.metadata.tags.length > 0 && (
             <div className="flex items-center gap-1.5">
               <Tag size={14} />
-              <div className="flex gap-1.5">
+              <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
                 {contentItem.metadata.tags.map(tag => (
-                  <span key={tag} className="px-1.5 py-0.5 rounded bg-accent/10 text-accent font-medium">
+                  <Link
+                    key={tag}
+                    href={`/${contentItem.metadata.source}?tag=${tag}`}
+                    className="px-1.5 py-0.5 rounded bg-accent/10 text-accent font-medium hover:bg-accent hover:text-white transition-colors whitespace-nowrap"
+                  >
                     #{tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
             </div>

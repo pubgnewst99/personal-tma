@@ -1,18 +1,20 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { apiClient } from "@/lib/api-client";
 import { ContentMetadata } from "@/lib/indexer";
 import FileCard from "@/components/FileCard";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-export default function BacaanPage() {
+function BacaanContent() {
+  const searchParams = useSearchParams();
+  const initialTag = searchParams.get("tag");
+  
   const [items, setItems] = useState<ContentMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"date" | "title">("date");
-  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeTag, setActiveTag] = useState<string | null>(initialTag);
 
   useEffect(() => {
     apiClient.getContentList("bacaan")

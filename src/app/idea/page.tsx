@@ -1,17 +1,20 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { apiClient } from "@/lib/api-client";
 import { ContentMetadata } from "@/lib/indexer";
 import FileCard from "@/components/FileCard";
 import { ChevronLeft, Folder, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-export default function IdeaPage() {
+function IdeaContent() {
+  const searchParams = useSearchParams();
+  const initialTag = searchParams.get("tag");
+
   const [items, setItems] = useState<ContentMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"date" | "title">("title");
+  const [activeTag, setActiveTag] = useState<string | null>(initialTag);
 
   useEffect(() => {
     apiClient.getContentList("idea")
@@ -21,12 +24,14 @@ export default function IdeaPage() {
   }, []);
 
   // Group by folder and sort
-  const groups = items.reduce((acc, item) => {
-    const folder = item.folder || "Uncategorized";
-    if (!acc[folder]) acc[folder] = [];
-    acc[folder].push(item);
-    return acc;
-  }, {} as Record<string, ContentMetadata[]>);
+  const groups = items
+    .filter(item => !activeTag || item.tags.includes(activeTag))
+    .reduce((acc, item) => {
+      const folder = item.folder || "Uncategorized";
+      if (!acc[folder]) acc[folder] = [];
+      acc[folder].push(item);
+      return acc;
+    }, {} as Record<string, ContentMetadata[]>);
 
   // Sort folders alphabetically
   const sortedFolderNames = Object.keys(groups).sort((a, b) => {
@@ -45,7 +50,12 @@ export default function IdeaPage() {
           >
             <ChevronLeft size={20} />
           </Link>
-          <h1 className="text-2xl font-bold text-tg-text">Ideas</h1>
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-bold text-tg-text">Ideas</h1>
+            {activeTag && (
+              <span className="text-xs text-accent font-medium">Filtered by #{activeTag}</span>
+            )}
+          </div>
         </div>
         <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-lg">
           <button 
@@ -98,12 +108,24 @@ export default function IdeaPage() {
             })
           ) : (
             <div className="py-20 text-center space-y-4">
-              <div className="text-4xl">💡</div>
-              <p className="text-tg-hint">No ideas found</p>
+              <div className="text-4xl text-tg-hint opacity-50">💡</div>
+              <p className="text-tg-hint">No ideas found matching #{activeTag}</p>
             </div>
           )}
         </div>
       )}
     </div>
+  );
+}
+
+export default function IdeaPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-accent" size={32} />
+      </div>
+    }>
+      <IdeaContent />
+    </Suspense>
   );
 }
