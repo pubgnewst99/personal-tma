@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { toggleTodo } from "@/lib/todo-service";
 
+export const runtime = "nodejs";
+
 export async function PATCH(request: Request) {
     try {
         const { id, checked, revision } = await request.json();

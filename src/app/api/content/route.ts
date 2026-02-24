@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { listContent } from "@/lib/indexer";
 
-export async function GET(request: Request) {
+export const runtime = "nodejs";
+
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const source = searchParams.get("source") as "bacaan" | "idea";
 

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getContentById } from "@/lib/indexer";
 
+export const runtime = "nodejs";
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getTodoState } from "@/lib/todo-service";
 
+export const runtime = "nodejs";
+
 export async function GET() {
   try {
     const state = await getTodoState();

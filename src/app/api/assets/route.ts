@@ -1,10 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { validatePath } from "@/lib/path-policy";
 import fs from "fs/promises";
 import path from "path";
 import { BACAAN_DIR, IDEA_DIR } from "@/lib/path-policy";
 
-export async function GET(request: Request) {
+export const runtime = "nodejs";
+
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const filePath = searchParams.get("path");
   const source = searchParams.get("source") as "bacaan" | "idea";
@@ -20,7 +22,7 @@ export async function GET(request: Request) {
 
     const fileBuffer = await fs.readFile(absolutePath);
     const ext = path.extname(absolutePath).toLowerCase();
-    
+
     let contentType = "application/octet-stream";
     if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg";
     else if (ext === ".png") contentType = "image/png";
