@@ -13,34 +13,25 @@ const ICON_MAP = {
 interface CategoryCardProps {
     title: string;
     description: string;
-    iconType: keyof typeof ICON_MAP;
-    href: string;
+    icon: React.ElementType; // Changed from iconType
+    path: string; // Changed from href
     count?: number;
 }
 
-export default function CategoryCard({ title, description, iconType, href, count }: CategoryCardProps) {
-    const Icon = ICON_MAP[iconType] || HelpCircle;
+export default function CategoryCard({ title, description, path, icon: Icon }: CategoryCardProps) {
+    // const Icon = ICON_MAP[iconType] || HelpCircle; // This line is removed as icon is passed directly
 
     return (
-        <Link href={href}>
+        <Link href={path}>
             <motion.div
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ y: -4 }}
                 whileTap={{ scale: 0.98 }}
-                className="relative group overflow-hidden rounded-2xl p-6 bg-tg-secondary border border-black/5 dark:border-white/5 shadow-sm"
+                className="h-full p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 shadow-sm hover:shadow-md transition-all flex flex-col gap-4"
             >
-                <div className="flex items-start justify-between mb-4">
-                    <div className="p-3 rounded-xl bg-accent/10 text-accent">
-                        <Icon size={24} />
-                    </div>
-                    {count !== undefined && (
-                        <span className="text-xs font-medium text-tg-hint px-2 py-1 bg-black/5 dark:bg-white/5 rounded-full">
-                            {count} items
-                        </span>
-                    )}
+                <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-tg-text">
+                    <Icon size={20} />
                 </div>
                 <div>
-                    <h3 className="text-lg font-semibold text-tg-text mb-1">{title}</h3>
-                    <p className="text-sm text-tg-hint line-clamp-2">{description}</p>
                 </div>
                 <div className="absolute right-6 bottom-6 opacity-0 group-hover:opacity-100 transition-opacity">
                     <motion.div

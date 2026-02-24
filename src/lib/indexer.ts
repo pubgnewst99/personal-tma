@@ -13,6 +13,7 @@ export type ContentMetadata = {
     summary?: string;
     updatedAt: number;
     folder?: string;
+    readingTime?: number;
 };
 
 export type ContentItem = {
@@ -68,7 +69,8 @@ export async function listContent(source: "bacaan" | "idea"): Promise<ContentMet
                         tags: data.tags || data.labels || [],
                         summary,
                         updatedAt: stats.mtimeMs,
-                        folder
+                        folder,
+                        readingTime: Math.max(1, Math.ceil(content.split(/\s+/).length / 200))
                     };
                 } catch (err) {
                     console.error(`Error parsing ${file}:`, err);
@@ -107,7 +109,8 @@ export async function getContentById(id: string): Promise<ContentItem | null> {
             title: data.title || content.match(/^#\s+(.+)$/m)?.[1].trim() || path.basename(absolutePath, ".md"),
             date: data.date || content.match(/Date Saved:\s*(\d{4}-\d{2}-\d{2})/i)?.[1] || stats.mtime.toISOString(),
             tags: data.tags || data.labels || [],
-            updatedAt: stats.mtimeMs
+            updatedAt: stats.mtimeMs,
+            readingTime: Math.max(1, Math.ceil(content.split(/\s+/).length / 200))
         };
 
         return { metadata, content };

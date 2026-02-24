@@ -25,6 +25,8 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+import Navigation from "@/components/Navigation";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,9 +43,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-accent/30`}
       >
-        <main className="min-h-screen">
+        <main className="min-h-screen pb-24">
           {children}
         </main>
+        <Navigation />
       </body>
     </html>
   );
