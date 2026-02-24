@@ -86,7 +86,10 @@ export default function ContentPage({ params }: { params: Promise<{ id: string }
         <div className="flex flex-wrap gap-4 items-center text-xs text-tg-hint">
           <div className="flex items-center gap-1.5">
             <Calendar size={14} />
-            {new Date(contentItem.metadata.date || "").toLocaleDateString()}
+            {(() => {
+              const d = new Date(contentItem.metadata.date || "");
+              return isNaN(d.getTime()) ? (contentItem.metadata.date || "Unknown Date") : d.toLocaleDateString();
+            })()}
           </div>
           {contentItem.metadata.tags.length > 0 && (
             <div className="flex items-center gap-1.5">

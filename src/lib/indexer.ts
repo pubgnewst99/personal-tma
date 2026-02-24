@@ -43,7 +43,14 @@ export async function listContent(source: "bacaan" | "idea"): Promise<ContentMet
                     let title = data.title;
                     if (!title) {
                         const h1Match = content.match(/^#\s+(.+)$/m);
-                        title = h1Match ? h1Match[1] : path.basename(file, ".md");
+                        title = h1Match ? h1Match[1].trim() : path.basename(file, ".md");
+                    }
+
+                    // Fallback date: frontmatter -> Content body "Date Saved: ..." -> mtime
+                    let dateStr = data.date;
+                    if (!dateStr) {
+                        const dateMatch = content.match(/Date Saved:\s*(\d{4}-\d{2}-\d{2})/i);
+                        dateStr = dateMatch ? dateMatch[1] : stats.mtime.toISOString();
                     }
 
                     // Fallback summary: frontmatter -> first paragraph
@@ -57,8 +64,8 @@ export async function listContent(source: "bacaan" | "idea"): Promise<ContentMet
                         source,
                         path: relativePath,
                         title,
-                        date: data.date || stats.mtime.toISOString(),
-                        tags: data.tags || [],
+                        date: dateStr,
+                        tags: data.tags || data.labels || [],
                         summary,
                         updatedAt: stats.mtimeMs,
                         folder
@@ -97,8 +104,9 @@ export async function getContentById(id: string): Promise<ContentItem | null> {
             id,
             source: absolutePath.startsWith(BACAAN_DIR) ? "bacaan" : "idea",
             path: absolutePath,
-            title: data.title || path.basename(absolutePath, ".md"),
-            tags: data.tags || [],
+            title: data.title || content.match(/^#\s+(.+)$/m)?.[1].trim() || path.basename(absolutePath, ".md"),
+            date: data.date || content.match(/Date Saved:\s*(\d{4}-\d{2}-\d{2})/i)?.[1] || stats.mtime.toISOString(),
+            tags: data.tags || data.labels || [],
             updatedAt: stats.mtimeMs
         };
 
