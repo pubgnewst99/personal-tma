@@ -32,15 +32,8 @@ export default function CategoryCard({ title, description, path, icon: Icon }: C
                     <Icon size={20} />
                 </div>
                 <div>
-                </div>
-                <div className="absolute right-6 bottom-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <motion.div
-                        initial={{ x: -10 }}
-                        animate={{ x: 0 }}
-                        className="text-accent"
-                    >
-                        →
-                    </motion.div>
+                    <h3 className="text-lg font-bold text-tg-text mb-1">{title}</h3>
+                    <p className="text-[11px] text-tg-hint leading-relaxed">{description}</p>
                 </div>
             </motion.div>
         </Link>
