@@ -8,7 +8,7 @@
   --color-tg-button: var(--tg-theme-button-color, #2481cc);
   --color-tg-button-text: var(--tg-theme-button-text-color, #ffffff);
   --color-tg-secondary: var(--tg-theme-secondary-bg-color, #f4f4f5);
-  
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -16,7 +16,8 @@
 :root {
   --background: var(--tg-theme-bg-color, #ffffff);
   --foreground: var(--tg-theme-text-color, #171717);
-  --accent: var(--tg-theme-button-color, #0079F2);
+  --accent: var(--tg-theme-button-color, #2481cc);
+  --secondary: var(--tg-theme-secondary-bg-color, #f4f4f5);
 }
 
 body {
@@ -44,9 +45,11 @@ body {
 ::-webkit-scrollbar {
   width: 4px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--tg-theme-hint-color, #ccc);
   border-radius: 10px;

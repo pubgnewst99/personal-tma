@@ -26,7 +26,7 @@ export default function FileCard({ item }: FileCardProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={handleCardClick}
-            className="group relative p-6 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm border border-black/5 dark:border-white/5 hover:shadow-md transition-all cursor-pointer mb-4"
+            className="group relative p-6 rounded-2xl bg-tg-secondary shadow-sm border border-black/5 dark:border-white/5 hover:shadow-md transition-all cursor-pointer mb-4"
         >
             <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-2 text-accent">
