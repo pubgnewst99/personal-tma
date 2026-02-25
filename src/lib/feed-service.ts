@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import { listContent, type ContentMetadata } from "./indexer";
-import { getTodoState, type TodoNode } from "./todo-service";
+import { getTodoState, type TodoNode, type TodoState } from "./todo-service";
 import { TODO_FILE, validatePath } from "./path-policy";
 
 export type FeedSource = "bacaan" | "idea" | "todo" | "github";
@@ -61,6 +61,8 @@ type GitHubStarEntry = {
 
 const MAX_FEED_ITEMS = 30;
 const MAX_TODO_EVENTS = 500;
+const REMOTE_API_BASE = process.env.FEED_SOURCE_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "";
+let memoryTodoFeedLog: TodoFeedLog | null = null;
 
 function toSourceLabel(source: FeedSource): string {
   if (source === "bacaan") return "Bacaan";
@@ -234,6 +236,57 @@ function toTodoFeedItems(events: StoredTodoEvent[]): FeedItem[] {
   }));
 }
 
+function initializeTodoLog(snapshot: TodoSnapshot): TodoFeedLog {
+  return {
+    version: 1,
+    snapshot,
+    events: [],
+  };
+}
+
+function syncTodoFeedItemsInMemory(state: TodoState): TodoFeedSyncResult {
+  const snapshot = buildTodoSnapshot(state.parsed);
+  if (!memoryTodoFeedLog) {
+    memoryTodoFeedLog = initializeTodoLog(snapshot);
+    return { items: [], warnings: ["Todo feed uses in-memory history in this environment."] };
+  }
+
+  const newEvents = detectTodoEvents(memoryTodoFeedLog.snapshot, snapshot);
+  memoryTodoFeedLog = {
+    version: 1,
+    snapshot,
+    events: [...memoryTodoFeedLog.events, ...newEvents].slice(-MAX_TODO_EVENTS),
+  };
+
+  return {
+    items: toTodoFeedItems(memoryTodoFeedLog.events),
+    warnings: ["Todo feed uses in-memory history in this environment."],
+  };
+}
+
+function buildRemoteUrl(routePath: string): string {
+  if (!REMOTE_API_BASE) {
+    throw new Error("Remote API base is not configured.");
+  }
+  return new URL(routePath, REMOTE_API_BASE).toString();
+}
+
+async function fetchRemoteJson<T>(routePath: string): Promise<T> {
+  const response = await fetch(buildRemoteUrl(routePath));
+  if (!response.ok) {
+    throw new Error(`Remote source failed (${response.status})`);
+  }
+  return response.json() as Promise<T>;
+}
+
+async function getRemoteContent(source: "bacaan" | "idea"): Promise<ContentMetadata[]> {
+  return fetchRemoteJson<ContentMetadata[]>(`/api/content?source=${source}`);
+}
+
+async function getRemoteTodoState(): Promise<TodoState> {
+  return fetchRemoteJson<TodoState>("/api/todos");
+}
+
 async function syncTodoFeedItems(): Promise<TodoFeedSyncResult> {
   const warnings: string[] = [];
   const logPath = resolveTodoFeedLogPath();
@@ -248,11 +301,7 @@ async function syncTodoFeedItems(): Promise<TodoFeedSyncResult> {
   }
 
   if (!existingLog) {
-    await writeTodoFeedLog(logPath, {
-      version: 1,
-      snapshot: currentSnapshot,
-      events: [],
-    });
+    await writeTodoFeedLog(logPath, initializeTodoLog(currentSnapshot));
     return { items: [], warnings };
   }
 
@@ -335,37 +384,58 @@ async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
 export async function getHomeFeed(): Promise<FeedResponse> {
   const warnings: string[] = [];
   const allItems: FeedItem[] = [];
-  let localSourceSuccess = 0;
+  let sourceSuccess = 0;
 
   try {
     allItems.push(...toContentFeedItems(await listContent("bacaan")));
-    localSourceSuccess += 1;
+    sourceSuccess += 1;
   } catch {
-    warnings.push("Bacaan feed is unavailable.");
+    try {
+      allItems.push(...toContentFeedItems(await getRemoteContent("bacaan")));
+      sourceSuccess += 1;
+      warnings.push("Bacaan feed is served from remote API.");
+    } catch {
+      warnings.push("Bacaan feed is unavailable.");
+    }
   }
 
   try {
     allItems.push(...toContentFeedItems(await listContent("idea")));
-    localSourceSuccess += 1;
+    sourceSuccess += 1;
   } catch {
-    warnings.push("Idea feed is unavailable.");
+    try {
+      allItems.push(...toContentFeedItems(await getRemoteContent("idea")));
+      sourceSuccess += 1;
+      warnings.push("Idea feed is served from remote API.");
+    } catch {
+      warnings.push("Idea feed is unavailable.");
+    }
   }
 
   try {
     const todo = await syncTodoFeedItems();
     allItems.push(...todo.items);
     warnings.push(...todo.warnings);
-    localSourceSuccess += 1;
+    sourceSuccess += 1;
   } catch {
-    warnings.push("Todo feed is unavailable.");
+    try {
+      const remoteState = await getRemoteTodoState();
+      const todo = syncTodoFeedItemsInMemory(remoteState);
+      allItems.push(...todo.items);
+      warnings.push(...todo.warnings);
+      sourceSuccess += 1;
+      warnings.push("Todo feed is served from remote API.");
+    } catch {
+      warnings.push("Todo feed is unavailable.");
+    }
   }
 
   const github = await getGitHubFeedItems();
   allItems.push(...github.items);
   warnings.push(...github.warnings);
 
-  if (localSourceSuccess === 0 && allItems.length === 0) {
-    throw new Error("No local feed sources are available.");
+  if (sourceSuccess === 0 && allItems.length === 0) {
+    throw new Error("No feed sources are available.");
   }
 
   const items = allItems
