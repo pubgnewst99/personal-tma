@@ -8,6 +8,7 @@ import { ChevronLeft, Calendar, Tag, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { remark } from "remark";
+import rehypeHighlight from "rehype-highlight";
 import html from "rehype-stringify";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
@@ -48,6 +49,7 @@ export default function ContentPage() {
           .use(remarkParse)
           .use(remarkGfm)
           .use(remarkRehype)
+          .use(rehypeHighlight, { detect: false, ignoreMissing: true })
           .use(html)
           .process(rewrittenContent);
 
@@ -123,7 +125,7 @@ export default function ContentPage() {
       </header>
 
       <article
-        className="markdown-content"
+        className="markdown-body markdown-preview"
         dangerouslySetInnerHTML={{ __html: renderedContent }}
       />
     </div>
