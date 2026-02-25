@@ -11,6 +11,7 @@ import { remark } from "remark";
 import html from "rehype-stringify";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
+import remarkGfm from "remark-gfm";
 
 export default function ContentPage() {
   const params = useParams<{ id: string }>();
@@ -45,6 +46,7 @@ export default function ContentPage() {
 
         const processedContent = await remark()
           .use(remarkParse)
+          .use(remarkGfm)
           .use(remarkRehype)
           .use(html)
           .process(rewrittenContent);
@@ -79,7 +81,7 @@ export default function ContentPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-8 pb-32">
+    <div className="max-w-4xl mx-auto px-6 py-8 pb-32">
       <header className="mb-8">
         <Link
           href={contentItem.metadata.source === "bacaan" ? "/bacaan" : "/idea"}
@@ -121,10 +123,7 @@ export default function ContentPage() {
       </header>
 
       <article
-        className="prose dark:prose-invert prose-slate max-w-none 
-          prose-headings:text-tg-text prose-p:text-tg-text/90 prose-a:text-accent 
-          prose-strong:text-tg-text prose-code:text-accent prose-code:bg-accent/5 
-          prose-code:px-1 prose-code:rounded prose-code:before:content-none prose-code:after:content-none"
+        className="markdown-content"
         dangerouslySetInnerHTML={{ __html: renderedContent }}
       />
     </div>

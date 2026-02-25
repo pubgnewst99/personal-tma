@@ -28,10 +28,133 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Document styling */
-.prose {
-  max-width: 65ch;
-  line-height: 1.6;
+/* Markdown reading layout */
+.markdown-content {
+  max-width: 72ch;
+  margin-inline: auto;
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  font-size: 1.06rem;
+  line-height: 1.85;
+  color: color-mix(in srgb, var(--foreground) 92%, transparent);
+  letter-spacing: 0.01em;
+  text-wrap: pretty;
+}
+
+.markdown-content > * + * {
+  margin-top: 1.1em;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  color: var(--foreground);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin-top: 1.8em;
+  margin-bottom: 0.65em;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.markdown-content h1 {
+  font-size: clamp(1.8rem, 4vw, 2.35rem);
+}
+
+.markdown-content h2 {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+}
+
+.markdown-content h3 {
+  font-size: clamp(1.12rem, 2.4vw, 1.35rem);
+}
+
+.markdown-content p,
+.markdown-content li {
+  color: color-mix(in srgb, var(--foreground) 90%, transparent);
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 1.35em;
+}
+
+.markdown-content ul {
+  list-style: disc outside;
+}
+
+.markdown-content ol {
+  list-style: decimal outside;
+}
+
+.markdown-content li + li {
+  margin-top: 0.45em;
+}
+
+.markdown-content a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.markdown-content blockquote {
+  margin: 1.2em 0;
+  padding: 0.25em 1em;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: color-mix(in srgb, var(--foreground) 82%, transparent);
+}
+
+.markdown-content code {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: color-mix(in srgb, var(--foreground) 94%, transparent);
+  border-radius: 0.35rem;
+  padding: 0.1rem 0.3rem;
+}
+
+.markdown-content pre {
+  overflow-x: auto;
+  padding: 1rem;
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 9%, transparent);
+}
+
+.markdown-content pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.markdown-content hr {
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  margin: 2em 0;
+}
+
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+  margin: 1.2em 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  white-space: nowrap;
 }
 
 /* Glassmorphism utility */
