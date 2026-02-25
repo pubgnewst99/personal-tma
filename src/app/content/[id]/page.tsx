@@ -1,25 +1,32 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api-client";
 import { ContentItem } from "@/lib/indexer";
-export const runtime = 'edge';
 
 import { ChevronLeft, Calendar, Tag, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { remark } from "remark";
 import html from "rehype-stringify";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 
-export default function ContentPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function ContentPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
   const [contentItem, setContentItem] = useState<ContentItem | null>(null);
   const [renderedContent, setRenderedContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!id) {
+      setError("Invalid content ID");
+      setLoading(false);
+      return;
+    }
+
     async function loadContent() {
       try {
         const item = await apiClient.getContentDetail(id);
@@ -43,8 +50,9 @@ export default function ContentPage({ params }: { params: Promise<{ id: string }
           .process(rewrittenContent);
 
         setRenderedContent(processedContent.toString());
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to load content";
+        setError(message);
       } finally {
         setLoading(false);
       }
