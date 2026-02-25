@@ -39,10 +39,18 @@ function IdeaContent() {
       return acc;
     }, {} as Record<string, ContentMetadata[]>);
 
-  // Sort folders alphabetically
+  const getItemDate = (item: ContentMetadata) => new Date(item.date || 0).getTime();
+
   const sortedFolderNames = Object.keys(groups).sort((a, b) => {
     if (a === "Uncategorized") return 1;
     if (b === "Uncategorized") return -1;
+
+    if (sortBy === "date") {
+      const aLatest = Math.max(...groups[a].map(getItemDate));
+      const bLatest = Math.max(...groups[b].map(getItemDate));
+      return bLatest - aLatest;
+    }
+
     return a.localeCompare(b);
   });
 
@@ -98,7 +106,7 @@ function IdeaContent() {
             sortedFolderNames.map((folder) => {
               const folderItems = [...groups[folder]].sort((a, b) => {
                 if (sortBy === "date") {
-                  return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
+                  return getItemDate(b) - getItemDate(a);
                 }
                 return a.title.localeCompare(b.title);
               });
