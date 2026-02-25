@@ -19,16 +19,20 @@ function BacaanContent() {
   const [activeTag, setActiveTag] = useState<string | null>(initialTag);
 
   useEffect(() => {
+    setActiveTag(initialTag);
+  }, [initialTag]);
+
+  useEffect(() => {
     apiClient.getContentList("bacaan")
       .then(setItems)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
-  const allTags = Array.from(new Set(items.flatMap(item => item.tags))).sort();
+  const allTags = Array.from(new Set(items.flatMap(item => item.tags || []))).sort();
 
   const filteredAndSortedItems = items
-    .filter(item => !activeTag || item.tags.includes(activeTag))
+    .filter(item => !activeTag || item.tags?.includes(activeTag))
     .sort((a, b) => {
       if (sortBy === "date") {
         return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();

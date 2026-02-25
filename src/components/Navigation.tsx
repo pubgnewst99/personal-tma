@@ -29,7 +29,10 @@ export default function Navigation() {
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-tg-secondary/80 backdrop-blur-md border-t border-black/5 dark:border-white/5 pb-safe">
             <div className="max-w-md mx-auto flex justify-around items-center px-4 py-3">
                 {tabs.map((tab) => {
-                    const isActive = pathname.startsWith(tab.path);
+                    const isRootTab = tab.path === "/";
+                    const isActive = isRootTab
+                        ? pathname === "/"
+                        : pathname === tab.path || pathname.startsWith(`${tab.path}/`);
                     const Icon = tab.icon;
 
                     return (

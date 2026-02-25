@@ -19,6 +19,10 @@ function IdeaContent() {
   const [activeTag, setActiveTag] = useState<string | null>(initialTag);
 
   useEffect(() => {
+    setActiveTag(initialTag);
+  }, [initialTag]);
+
+  useEffect(() => {
     apiClient.getContentList("idea")
       .then(setItems)
       .catch(err => setError(err.message))
@@ -27,7 +31,7 @@ function IdeaContent() {
 
   // Group by folder and sort
   const groups = items
-    .filter(item => !activeTag || item.tags.includes(activeTag))
+    .filter(item => !activeTag || item.tags?.includes(activeTag))
     .reduce((acc, item) => {
       const folder = item.folder || "Uncategorized";
       if (!acc[folder]) acc[folder] = [];
@@ -55,7 +59,12 @@ function IdeaContent() {
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold text-tg-text">Ideas</h1>
             {activeTag && (
-              <span className="text-xs text-accent font-medium">Filtered by #{activeTag}</span>
+              <button
+                onClick={() => setActiveTag(null)}
+                className="text-xs text-accent font-medium hover:underline"
+              >
+                Filtered by #{activeTag} (clear)
+              </button>
             )}
           </div>
         </div>
@@ -111,7 +120,11 @@ function IdeaContent() {
           ) : (
             <div className="py-20 text-center space-y-4">
               <div className="text-4xl text-tg-hint opacity-50">💡</div>
-              <p className="text-tg-hint">No ideas found matching #{activeTag}</p>
+              <p className="text-tg-hint">
+                {activeTag
+                  ? `No ideas found matching #${activeTag}`
+                  : "No ideas found"}
+              </p>
             </div>
           )}
         </div>

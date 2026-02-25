@@ -1,25 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Circle, Loader2, AlertCircle } from "lucide-react";
-import { TodoItem, TodoState } from "@/lib/todo-service";
-import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { CheckCircle2, Circle, AlertCircle } from "lucide-react";
+import { TodoState } from "@/lib/todo-service";
+import { apiClient } from "@/lib/api-client";
 
-// Placeholder for Server Actions we'll implement next
 async function toggleTodoAction(id: number, checked: boolean, revision: string) {
-    const res = await fetch("/api/todos/toggle", {
-        method: "PATCH",
-        body: JSON.stringify({ id, checked, revision }),
-        headers: { "Content-Type": "application/json" }
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
+    return apiClient.toggleTodo(id, checked, revision);
 }
 
 export default function TodoList({ initialState }: { initialState: TodoState }) {
     const [state, setState] = useState(initialState);
-    const [isPending, startTransition] = useTransition();
+    const [isPending] = useTransition();
     const [error, setError] = useState<string | null>(null);
 
     const handleToggle = async (id: number, checked: boolean) => {
@@ -33,8 +26,9 @@ export default function TodoList({ initialState }: { initialState: TodoState }) 
         try {
             const newState = await toggleTodoAction(id, checked, state.revision);
             setState(newState);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Failed to update task";
+            setError(message);
             // Wait a bit then clear error
             setTimeout(() => setError(null), 5000);
         }
@@ -53,30 +47,63 @@ export default function TodoList({ initialState }: { initialState: TodoState }) 
                 </motion.div>
             )}
 
-            <div className="space-y-1">
-                {state.parsed.map((todo) => (
-                    <motion.div
-                        key={todo.id}
-                        layout
-                        className={`flex items-start gap-3 p-3 rounded-xl transition-colors hover:bg-black/5 dark:hover:bg-white/5 group`}
-                    >
-                        <button
-                            onClick={() => handleToggle(todo.id, !todo.checked)}
-                            disabled={isPending}
-                            className={`mt-0.5 transition-colors ${todo.checked ? 'text-accent' : 'text-tg-hint'}`}
-                        >
-                            {todo.checked ? <CheckCircle2 size={20} /> : <Circle size={20} className="group-hover:text-accent" />}
-                        </button>
-                        <div className={`flex-1 transition-opacity ${todo.checked ? 'opacity-50 line-through' : ''}`}>
-                            <div
-                                className="text-tg-text text-[15px]"
-                                style={{ marginLeft: `${todo.indent.length * 10}px` }}
-                            >
-                                {todo.text}
+            <div className="space-y-4">
+                {state.parsed.map((node) => {
+                    const isUnderFinished = state.parsed.find((p, i) => i < state.parsed.indexOf(node) && p.type === "heading" && p.text.toLowerCase().includes("finished"));
+
+                    if (node.type === "heading") {
+                        if (node.level === 2) {
+                            return (
+                                <div key={node.id} className="pt-8 pb-3 first:pt-0">
+                                    <h2 className="text-[11px] uppercase tracking-[0.2em] font-black text-accent mb-2">
+                                        {node.text}
+                                    </h2>
+                                    <div className="h-0.5 w-full bg-accent/10 rounded-full" />
+                                </div>
+                            );
+                        }
+                        return (
+                            <div key={node.id} className="pt-4 pb-2">
+                                <h3 className="text-base font-bold text-tg-text flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                                    {node.text}
+                                </h3>
                             </div>
-                        </div>
-                    </motion.div>
-                ))}
+                        );
+                    }
+
+                    const nodeClasses = `flex items-start gap-4 p-3 rounded-2xl transition-all hover:bg-black/5 dark:hover:bg-white/5 group ${node.checked || isUnderFinished ? 'opacity-40' : ''}`;
+
+                    return (
+                        <motion.div
+                            key={node.id}
+                            layout
+                            className={nodeClasses}
+                        >
+                            <button
+                                onClick={() => handleToggle(node.id, !node.checked!)}
+                                disabled={isPending}
+                                className={`mt-0.5 flex-shrink-0 transition-transform active:scale-90 ${node.checked ? 'text-accent' : 'text-tg-hint'}`}
+                            >
+                                {node.checked ? (
+                                    <div className="bg-accent rounded-full p-0.5 shadow-sm">
+                                        <CheckCircle2 size={16} className="text-white" />
+                                    </div>
+                                ) : (
+                                    <Circle size={20} className="group-hover:text-accent stroke-[1.5px]" />
+                                )}
+                            </button>
+                            <div className={`flex-1 pt-0.5 ${node.checked || isUnderFinished ? 'line-through decoration-accent/30 text-tg-hint' : 'text-tg-text'}`}>
+                                <div
+                                    className="text-[15px] font-medium leading-relaxed"
+                                    style={{ marginLeft: `${(node.indent?.length || 0) * 8}px` }}
+                                >
+                                    {node.text}
+                                </div>
+                            </div>
+                        </motion.div>
+                    );
+                })}
             </div>
 
             <div className="pt-4 text-[10px] text-tg-hint text-center uppercase tracking-tighter">

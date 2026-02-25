@@ -21,11 +21,22 @@ export default function FileCard({ item }: FileCardProps) {
         router.push(`/${item.source}?tag=${tag}`);
     };
 
+    const handleCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleCardClick();
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={handleCardClick}
+            onKeyDown={handleCardKeyDown}
+            role="button"
+            tabIndex={0}
+            aria-label={`Open ${item.title}`}
             className="group relative p-6 rounded-2xl bg-tg-secondary shadow-sm border border-black/5 dark:border-white/5 hover:shadow-md transition-all cursor-pointer mb-4"
         >
             <div className="flex justify-between items-start mb-3">
@@ -56,7 +67,7 @@ export default function FileCard({ item }: FileCardProps) {
 
             <div className="flex items-center justify-between mt-auto">
                 <div className="flex flex-wrap gap-1.5">
-                    {item.tags.slice(0, 3).map(tag => (
+                    {item.tags?.slice(0, 3).map(tag => (
                         <button
                             key={tag}
                             onClick={(e) => handleTagClick(e, tag)}

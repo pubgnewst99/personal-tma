@@ -36,9 +36,22 @@ body {
 
 /* Glassmorphism utility */
 .glass {
-  background: rgba(var(--background), 0.7);
+  background: color-mix(in srgb, var(--background) 70%, transparent);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(var(--foreground), 0.1);
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Custom scrollbar for minimalist look */
