@@ -38,19 +38,25 @@ export async function GET(request: NextRequest) {
     if (canProxyToRemote(request.url)) {
       try {
         const upstream = await fetch(buildRemoteUrl(`/api/content?source=${source}`));
-        const body = await upstream.text();
-        return new NextResponse(body, {
-          status: upstream.status,
-          headers: {
-            "Content-Type": upstream.headers.get("content-type") || "application/json",
-          },
-        });
+        if (upstream.ok) {
+          const body = await upstream.text();
+          return new NextResponse(body, {
+            status: upstream.status,
+            headers: {
+              "Content-Type": upstream.headers.get("content-type") || "application/json",
+            },
+          });
+        }
       } catch {
         // fall through to local error response
       }
     }
 
+    // Degrade gracefully for list pages: empty collection keeps UI functional.
     const message = error instanceof Error ? error.message : "Failed to load content";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json([], {
+      status: 200,
+      headers: { "X-Content-Warning": message },
+    });
   }
 }
