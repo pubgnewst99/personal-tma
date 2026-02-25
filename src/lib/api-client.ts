@@ -1,5 +1,6 @@
-import { ContentMetadata, ContentItem } from "./indexer";
-import { TodoState } from "./todo-service";
+import type { ContentMetadata, ContentItem } from "./indexer";
+import type { TodoState } from "./todo-service";
+import type { FeedResponse } from "./feed-service";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
@@ -40,6 +41,9 @@ export const apiClient = {
       body: JSON.stringify({ id, checked, revision }),
       headers: { "Content-Type": "application/json" }
     }),
+
+  getFeed: () =>
+    apiFetch<FeedResponse>("/api/feed"),
 
   getAssetUrl: (filePath: string, source: "bacaan" | "idea") => {
     // Return the full URL for the asset serving endpoint
