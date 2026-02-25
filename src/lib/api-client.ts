@@ -5,6 +5,11 @@ import type { FeedResponse } from "./feed-service";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 function buildApiUrl(routePath: string): string {
+  // In browser, prefer same-origin API routes to avoid stale external base URL misconfig.
+  if (typeof window !== "undefined") {
+    return routePath;
+  }
+
   if (!API_BASE) return routePath;
 
   const base = API_BASE.replace(/\/+$/, "");
