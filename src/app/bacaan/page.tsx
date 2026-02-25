@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { apiClient } from "@/lib/api-client";
 import { ContentMetadata } from "@/lib/indexer";
 import FileCard from "@/components/FileCard";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -17,6 +17,7 @@ function BacaanContent() {
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"date" | "title">("date");
   const [activeTag, setActiveTag] = useState<string | null>(initialTag);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     setActiveTag(initialTag);
@@ -31,8 +32,24 @@ function BacaanContent() {
 
   const allTags = Array.from(new Set(items.flatMap(item => item.tags || []))).sort();
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
   const filteredAndSortedItems = items
     .filter(item => !activeTag || item.tags?.includes(activeTag))
+    .filter((item) => {
+      if (!normalizedQuery) return true;
+
+      const haystack = [
+        item.title,
+        item.summary || "",
+        (item.tags || []).join(" "),
+        item.path,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(normalizedQuery);
+    })
     .sort((a, b) => {
       if (sortBy === "date") {
         return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
@@ -88,6 +105,26 @@ function BacaanContent() {
             ))}
           </div>
         )}
+
+        <div className="relative mt-1">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-tg-hint" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search title, summary, tags..."
+            className="w-full rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 pl-9 pr-9 py-2 text-sm text-tg-text placeholder:text-tg-hint outline-none focus:ring-2 focus:ring-accent/30"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 text-tg-hint"
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
       </header>
 
       {loading ? (
