@@ -45,7 +45,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
+    <div className="max-w-2xl mx-auto px-5 py-8">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-tg-text mb-2 tracking-tight">Personal OS</h1>
         <p className="text-tg-hint leading-relaxed italic text-sm">
@@ -65,7 +65,7 @@ export default function Home() {
           </div>
         </div>
       ) : feed ? (
-        <div className="space-y-5">
+        <div className="space-y-3">
           {feed.warnings.length > 0 && (
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
               {feed.warnings.map((warning) => (
@@ -79,33 +79,33 @@ export default function Home() {
               No recent activity yet.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-1.5">
               {feed.items.map((item) => {
                 const Icon = getFeedIcon(item);
 
                 return (
                   <article
                     key={item.id}
-                    className="rounded-2xl border border-black/5 dark:border-white/10 bg-tg-secondary p-4"
+                    className="rounded-xl border border-black/5 dark:border-white/10 bg-tg-secondary/55 px-3 py-2.5"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 rounded-xl bg-accent/10 p-2 text-accent">
-                        <Icon size={16} />
+                    <div className="flex items-start gap-2">
+                      <div className="mt-0.5 rounded-lg bg-accent/10 p-1.5 text-accent">
+                        <Icon size={14} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="mb-1 text-[10px] uppercase tracking-wider text-accent font-semibold">
+                        <div className="mb-0.5 text-[9px] uppercase tracking-[0.08em] text-accent font-semibold">
                           {getFeedBadge(item)}
                         </div>
-                        <h2 className="text-sm font-semibold text-tg-text leading-snug break-words">
+                        <h2 className="text-[13px] font-semibold text-tg-text leading-snug break-words">
                           {item.title}
                         </h2>
                         {item.subtitle && (
-                          <p className="mt-1 text-xs text-tg-hint break-words">
+                          <p className="mt-0.5 text-[11px] text-tg-hint break-words">
                             {item.subtitle}
                           </p>
                         )}
                       </div>
-                      <time className="text-[10px] whitespace-nowrap text-tg-hint pl-2">
+                      <time className="text-[10px] whitespace-nowrap text-tg-hint pl-1">
                         {formatTimestamp(item.timestamp)}
                       </time>
                     </div>
