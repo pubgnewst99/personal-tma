@@ -4,8 +4,39 @@ import type { FeedResponse } from "./feed-service";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
+function buildApiUrl(routePath: string): string {
+  if (!API_BASE) return routePath;
+
+  const base = API_BASE.replace(/\/+$/, "");
+  if (base.endsWith("/api") && routePath.startsWith("/api/")) {
+    return `${base}${routePath.slice(4)}`;
+  }
+  return `${base}${routePath}`;
+}
+
+async function extractApiError(response: Response): Promise<string> {
+  const fallback = `API Error: ${response.status}`;
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    try {
+      const json = await response.json() as { error?: string; message?: string };
+      return json.error || json.message || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  const text = (await response.text()).trim();
+  if (!text || /^<!doctype html/i.test(text)) {
+    return fallback;
+  }
+
+  return text.slice(0, 300);
+}
+
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE}${path}`;
+  const url = buildApiUrl(path);
   
   // Get Telegram initData if available
   const initData = typeof window !== "undefined" ? window.Telegram?.WebApp?.initData : "";
@@ -18,8 +49,12 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   const response = await fetch(url, { ...options, headers });
   
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || `API Error: ${response.status}`);
+    throw new Error(await extractApiError(response));
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(`Unexpected API response from ${url}`);
   }
   
   return response.json();

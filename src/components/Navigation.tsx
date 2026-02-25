@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Lightbulb, House } from "lucide-react";
+import { BookOpen, Lightbulb, House, CheckSquare } from "lucide-react";
 
 export default function Navigation() {
     const pathname = usePathname();
@@ -22,6 +22,11 @@ export default function Navigation() {
             name: "Home",
             path: "/",
             icon: House,
+        },
+        {
+            name: "Todos",
+            path: "/todos",
+            icon: CheckSquare,
         },
     ];
 
