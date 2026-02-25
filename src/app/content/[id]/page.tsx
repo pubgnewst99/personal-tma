@@ -3,6 +3,8 @@
 import { useEffect, useState, use } from "react";
 import { apiClient } from "@/lib/api-client";
 import { ContentItem } from "@/lib/indexer";
+export const runtime = 'edge';
+
 import { ChevronLeft, Calendar, Tag, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { remark } from "remark";
@@ -21,7 +23,7 @@ export default function ContentPage({ params }: { params: Promise<{ id: string }
     async function loadContent() {
       try {
         const item = await apiClient.getContentDetail(id);
-        
+
         // Rewrite relative image paths (e.g., ./assets/image.jpg) to point to VPS API
         // This is a simple regex approach that covers standard markdown image syntax
         const rewrittenContent = item.content.replace(
@@ -33,13 +35,13 @@ export default function ContentPage({ params }: { params: Promise<{ id: string }
         );
 
         setContentItem(item);
-        
+
         const processedContent = await remark()
           .use(remarkParse)
           .use(remarkRehype)
           .use(html)
           .process(rewrittenContent);
-        
+
         setRenderedContent(processedContent.toString());
       } catch (err: any) {
         setError(err.message);
@@ -71,18 +73,18 @@ export default function ContentPage({ params }: { params: Promise<{ id: string }
   return (
     <div className="max-w-3xl mx-auto px-6 py-8 pb-32">
       <header className="mb-8">
-        <Link 
+        <Link
           href={contentItem.metadata.source === "bacaan" ? "/bacaan" : "/idea"}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/5 dark:bg-white/5 text-tg-hint text-sm hover:text-tg-text transition-colors mb-6"
         >
           <ChevronLeft size={16} />
           {contentItem.metadata.source === "bacaan" ? "Back to Bacaan" : "Back to Ideas"}
         </Link>
-        
+
         <h1 className="text-3xl font-bold text-tg-text mb-4 leading-tight">
           {contentItem.metadata.title}
         </h1>
-        
+
         <div className="flex flex-wrap gap-4 items-center text-xs text-tg-hint">
           <div className="flex items-center gap-1.5">
             <Calendar size={14} />
@@ -110,7 +112,7 @@ export default function ContentPage({ params }: { params: Promise<{ id: string }
         </div>
       </header>
 
-      <article 
+      <article
         className="prose dark:prose-invert prose-slate max-w-none 
           prose-headings:text-tg-text prose-p:text-tg-text/90 prose-a:text-accent 
           prose-strong:text-tg-text prose-code:text-accent prose-code:bg-accent/5 

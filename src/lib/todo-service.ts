@@ -1,16 +1,18 @@
 import fs from "fs/promises";
 import { TODO_FILE } from "./path-policy";
 
-export type TodoItem = {
+export type TodoNode = {
+    type: "item" | "heading";
     id: number; // line index
     text: string;
-    checked: boolean;
-    indent: string;
+    checked?: boolean;
+    indent?: string;
+    level?: number;
 };
 
 export type TodoState = {
     raw: string;
-    parsed: TodoItem[];
+    parsed: TodoNode[];
     revision: string;
 };
 
@@ -23,18 +25,34 @@ export async function getTodoState(): Promise<TodoState> {
     const revision = stats.mtimeMs.toString();
 
     const lines = raw.split("\n");
-    const parsed: TodoItem[] = lines.map((line, index) => {
-        const match = line.match(/^(\s*)-\s+\[([ xX])\]\s+(.+)$/);
-        if (match) {
+    const parsed: TodoNode[] = lines.map((line, index) => {
+        // Match todo items: - [ ] text or - [x] text
+        const todoMatch = line.match(/^(\s*)-\s+\[([ xX])\]\s+(.+)$/);
+        if (todoMatch) {
             return {
+                type: "item",
                 id: index,
-                indent: match[1],
-                checked: match[2].toLowerCase() === "x",
-                text: match[3],
+                indent: todoMatch[1],
+                checked: todoMatch[2].toLowerCase() === "x",
+                text: todoMatch[3],
             };
         }
+
+        // Match headings: ## Section or ### Sub-section
+        const headingMatch = line.match(/^(#{2,3})\s+(.+)$/);
+        if (headingMatch) {
+            return {
+                type: "heading",
+                id: index,
+                text: headingMatch[2],
+                level: headingMatch[1].length,
+                indent: "",      // Defensive: prevent crash in older frontend shells
+                checked: false   // Defensive: prevent crash in older frontend shells
+            };
+        }
+
         return null;
-    }).filter(Boolean) as TodoItem[];
+    }).filter(Boolean) as TodoNode[];
 
     return { raw, parsed, revision };
 }

@@ -21,17 +21,31 @@ export type ContentItem = {
     content: string;
 };
 
+// Simple in-memory cache
+let metadataCache: { [key: string]: { data: ContentMetadata[], timestamp: number } } = {};
+const CACHE_TTL = 30000; // 30 seconds
+
 /**
  * Scans a directory recursively and returns metadata for all .md files.
  */
 export async function listContent(source: "bacaan" | "idea"): Promise<ContentMetadata[]> {
-    const rootDir = source === "bacaan" ? BACAAN_DIR : IDEA_DIR;
-    const files = await getFilesRecursive(rootDir);
+    const now = Date.now();
+    if (metadataCache[source] && now - metadataCache[source].timestamp < CACHE_TTL) {
+        return metadataCache[source].data;
+    }
 
-    const results = await Promise.all(
-        files
-            .filter(file => file.endsWith(".md"))
-            .map(async file => {
+    const rootDir = source === "bacaan" ? BACAAN_DIR : IDEA_DIR;
+    const allFiles = await getFilesRecursive(rootDir);
+    const mdFiles = allFiles.filter(file => file.endsWith(".md"));
+
+    // Process in smaller batches to avoid memory/CPU spikes
+    const BATCH_SIZE = 10;
+    const results: (ContentMetadata | null)[] = [];
+
+    for (let i = 0; i < mdFiles.length; i += BATCH_SIZE) {
+        const batch = mdFiles.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.all(
+            batch.map(async file => {
                 try {
                     const stats = await fs.stat(file);
                     const rawContent = await fs.readFile(file, "utf-8");
@@ -77,9 +91,13 @@ export async function listContent(source: "bacaan" | "idea"): Promise<ContentMet
                     return null;
                 }
             })
-    );
+        );
+        results.push(...batchResults);
+    }
 
-    return (results.filter(Boolean) as ContentMetadata[]).sort((a, b) => b.updatedAt - a.updatedAt);
+    const finalData = (results.filter(Boolean) as ContentMetadata[]).sort((a, b) => b.updatedAt - a.updatedAt);
+    metadataCache[source] = { data: finalData, timestamp: now };
+    return finalData;
 }
 
 async function getFilesRecursive(dir: string): Promise<string[]> {

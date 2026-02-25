@@ -17,9 +17,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const rootDir = source === "bacaan" ? BACAAN_DIR : IDEA_DIR;
-    // Construct the absolute path
     const absolutePath = validatePath(path.join(rootDir, filePath));
 
+    const stats = await fs.stat(absolutePath);
+    if (!stats.isFile()) {
+      return NextResponse.json({ error: "Not a file" }, { status: 404 });
+    }
+
+    // If file is very large (> 10MB), we might want to stream it
+    // But for now, most TMA assets are small.
     const fileBuffer = await fs.readFile(absolutePath);
     const ext = path.extname(absolutePath).toLowerCase();
 
