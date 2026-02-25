@@ -9,6 +9,11 @@ export default function Navigation() {
 
     const tabs = [
         {
+            name: "Home",
+            path: "/",
+            icon: House,
+        },
+        {
             name: "Bacaan",
             path: "/bacaan",
             icon: BookOpen,
@@ -17,11 +22,6 @@ export default function Navigation() {
             name: "Idea",
             path: "/idea",
             icon: Lightbulb,
-        },
-        {
-            name: "Home",
-            path: "/",
-            icon: House,
         },
         {
             name: "Todos",
