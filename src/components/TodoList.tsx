@@ -48,8 +48,16 @@ export default function TodoList({ initialState }: { initialState: TodoState }) 
             )}
 
             <div className="space-y-4">
-                {state.parsed.map((node) => {
-                    const isUnderFinished = state.parsed.find((p, i) => i < state.parsed.indexOf(node) && p.type === "heading" && p.text.toLowerCase().includes("finished"));
+                {state.parsed.map((node, index) => {
+                    let nearestSection: string | null = null;
+                    for (let i = index; i >= 0; i -= 1) {
+                        const current = state.parsed[i];
+                        if (current.type === "heading" && current.level === 2) {
+                            nearestSection = current.text.toLowerCase();
+                            break;
+                        }
+                    }
+                    const isUnderFinished = Boolean(nearestSection && nearestSection.includes("finished"));
 
                     if (node.type === "heading") {
                         if (node.level === 2) {

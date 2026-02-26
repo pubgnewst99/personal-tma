@@ -19,6 +19,42 @@ function buildApiUrl(routePath: string): string {
   return `${base}${routePath}`;
 }
 
+function normalizeTags(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw
+      .map((entry) => {
+        if (typeof entry === "string") return entry;
+        if (entry && typeof entry === "object") {
+          const candidate = (entry as { name?: unknown; value?: unknown; label?: unknown });
+          if (typeof candidate.name === "string") return candidate.name;
+          if (typeof candidate.value === "string") return candidate.value;
+          if (typeof candidate.label === "string") return candidate.label;
+        }
+        return "";
+      })
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+  }
+
+  if (typeof raw === "string") {
+    return raw
+      .split(/[,\n]/)
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+type ApiContentMetadata = Omit<ContentMetadata, "tags"> & { tags?: unknown; labels?: unknown };
+
+function normalizeContentMetadata(item: ApiContentMetadata): ContentMetadata {
+  return {
+    ...item,
+    tags: normalizeTags(item.tags ?? item.labels),
+  };
+}
+
 async function extractApiError(response: Response): Promise<string> {
   const fallback = `API Error: ${response.status}`;
   const contentType = response.headers.get("content-type") || "";
@@ -66,11 +102,18 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 }
 
 export const apiClient = {
-  getContentList: (source: "bacaan" | "idea") => 
-    apiFetch<ContentMetadata[]>(`/api/content?source=${source}`),
+  getContentList: async (source: "bacaan" | "idea") => {
+    const list = await apiFetch<ApiContentMetadata[]>(`/api/content?source=${source}`);
+    return list.map(normalizeContentMetadata);
+  },
   
-  getContentDetail: (id: string) => 
-    apiFetch<ContentItem>(`/api/content/${id}`),
+  getContentDetail: async (id: string) => {
+    const detail = await apiFetch<Omit<ContentItem, "metadata"> & { metadata: ApiContentMetadata }>(`/api/content/${id}`);
+    return {
+      ...detail,
+      metadata: normalizeContentMetadata(detail.metadata),
+    };
+  },
   
   getTodos: () => 
     apiFetch<TodoState>("/api/todos"),

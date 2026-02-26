@@ -70,10 +70,64 @@ export async function toggleTodo(lineIndex: number, checked: boolean, revision: 
 
     const lines = currentState.raw.split("\n");
     const line = lines[lineIndex];
+    if (typeof line !== "string") {
+        throw new Error("Invalid todo line.");
+    }
 
     // Replace the [ ] or [x] part
     const updatedLine = line.replace(/\[([ xX])\]/, `[${checked ? "x" : " "}]`);
+    if (updatedLine === line && !/\-\s+\[[ xX]\]\s+/.test(line)) {
+        throw new Error("Target line is not a todo item.");
+    }
     lines[lineIndex] = updatedLine;
+
+    const headingRegex = /^##\s+(.+)$/;
+
+    const findFinishedHeadingStart = (): number => {
+        for (let i = 0; i < lines.length; i += 1) {
+            const match = lines[i].match(headingRegex);
+            if (match && /finished/i.test(match[1])) return i;
+        }
+        return -1;
+    };
+
+    const getSectionStartForLine = (targetIndex: number): number => {
+        for (let i = targetIndex; i >= 0; i -= 1) {
+            if (headingRegex.test(lines[i])) return i;
+        }
+        return -1;
+    };
+
+    const findFinishedSectionEnd = (finishedStart: number): number => {
+        for (let i = finishedStart + 1; i < lines.length; i += 1) {
+            if (headingRegex.test(lines[i])) return i;
+        }
+        return lines.length;
+    };
+
+    const finishedStart = findFinishedHeadingStart();
+    if (finishedStart >= 0) {
+        const sectionStart = getSectionStartForLine(lineIndex);
+        const isInFinishedSection = sectionStart === finishedStart;
+
+        if (checked && !isInFinishedSection) {
+            const [movedLine] = lines.splice(lineIndex, 1);
+            let insertAt = findFinishedSectionEnd(finishedStart);
+            if (lineIndex < insertAt) insertAt -= 1;
+            while (insertAt > finishedStart + 1 && lines[insertAt - 1]?.trim() === "") {
+                insertAt -= 1;
+            }
+            lines.splice(insertAt, 0, movedLine);
+        } else if (!checked && isInFinishedSection) {
+            const [movedLine] = lines.splice(lineIndex, 1);
+            let insertAt = finishedStart;
+            if (lineIndex < insertAt) insertAt -= 1;
+            while (insertAt > 0 && lines[insertAt - 1]?.trim() === "") {
+                insertAt -= 1;
+            }
+            lines.splice(insertAt, 0, movedLine);
+        }
+    }
 
     const finalRaw = lines.join("\n");
     await fs.writeFile(TODO_FILE, finalRaw, "utf-8");

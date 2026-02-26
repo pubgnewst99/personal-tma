@@ -86,6 +86,9 @@ function toContentFeedItems(items: ContentMetadata[]): FeedItem[] {
     title: item.title,
     subtitle: buildContentSubtitle(item),
     timestamp: item.updatedAt,
+    meta: {
+      href: `/content/${item.id}`,
+    },
   }));
 }
 
@@ -233,6 +236,9 @@ function toTodoFeedItems(events: StoredTodoEvent[]): FeedItem[] {
     title: event.title,
     subtitle: event.type === "todo_completed" ? "Task completed" : "Task added",
     timestamp: event.timestamp,
+    meta: {
+      href: "/todos",
+    },
   }));
 }
 
@@ -321,11 +327,10 @@ async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
   const token = process.env.GITHUB_TOKEN;
   const username = process.env.GITHUB_USERNAME || process.env.NEXT_PUBLIC_GITHUB_USERNAME;
 
-  // GitHub stars are optional; skip silently when not configured.
   if (!username) {
     return {
       items: [],
-      warnings: [],
+      warnings: ["GitHub stars are not configured."],
     };
   }
 
@@ -368,6 +373,7 @@ async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
         subtitle: "Starred on GitHub",
         timestamp: starredAt,
         meta: {
+          href: entry.repo?.html_url || null,
           repoUrl: entry.repo?.html_url || null,
         },
       });

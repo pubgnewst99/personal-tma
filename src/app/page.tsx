@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
 import type { FeedItem, FeedResponse } from "@/lib/feed-service";
 import { Loader2, BookOpen, Lightbulb, CheckSquare, Star } from "lucide-react";
@@ -26,6 +27,16 @@ function getFeedBadge(item: FeedItem): string {
   if (item.type === "todo_completed") return "TODO • DONE";
   if (item.type === "github_starred") return "GITHUB • STARRED";
   return `${item.source.toUpperCase()} • UPDATED`;
+}
+
+function getFeedHref(item: FeedItem): string | null {
+  const href = item.meta?.href;
+  if (typeof href === "string" && href) return href;
+
+  const repoUrl = item.meta?.repoUrl;
+  if (typeof repoUrl === "string" && repoUrl) return repoUrl;
+
+  return null;
 }
 
 export default function Home() {
@@ -82,33 +93,59 @@ export default function Home() {
             <div className="space-y-1.5">
               {feed.items.map((item) => {
                 const Icon = getFeedIcon(item);
+                const href = getFeedHref(item);
+                const isExternal = Boolean(href && /^https?:\/\//i.test(href));
+
+                const content = (
+                  <div className="flex items-start gap-2">
+                    <div className="mt-0.5 rounded-lg bg-accent/10 p-1.5 text-accent">
+                      <Icon size={14} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-0.5 text-[9px] uppercase tracking-[0.08em] text-accent font-semibold">
+                        {getFeedBadge(item)}
+                      </div>
+                      <h2 className="text-[13px] font-semibold text-tg-text leading-snug break-words">
+                        {item.title}
+                      </h2>
+                      {item.subtitle && (
+                        <p className="mt-0.5 text-[11px] text-tg-hint break-words">
+                          {item.subtitle}
+                        </p>
+                      )}
+                    </div>
+                    <time className="text-[10px] whitespace-nowrap text-tg-hint pl-1">
+                      {formatTimestamp(item.timestamp)}
+                    </time>
+                  </div>
+                );
 
                 return (
                   <article
                     key={item.id}
-                    className="rounded-xl border border-black/5 dark:border-white/10 bg-tg-secondary/55 px-3 py-2.5"
+                    className="rounded-xl border border-black/5 dark:border-white/10 bg-tg-secondary/55"
                   >
-                    <div className="flex items-start gap-2">
-                      <div className="mt-0.5 rounded-lg bg-accent/10 p-1.5 text-accent">
-                        <Icon size={14} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-0.5 text-[9px] uppercase tracking-[0.08em] text-accent font-semibold">
-                          {getFeedBadge(item)}
-                        </div>
-                        <h2 className="text-[13px] font-semibold text-tg-text leading-snug break-words">
-                          {item.title}
-                        </h2>
-                        {item.subtitle && (
-                          <p className="mt-0.5 text-[11px] text-tg-hint break-words">
-                            {item.subtitle}
-                          </p>
-                        )}
-                      </div>
-                      <time className="text-[10px] whitespace-nowrap text-tg-hint pl-1">
-                        {formatTimestamp(item.timestamp)}
-                      </time>
-                    </div>
+                    {href ? (
+                      isExternal ? (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block px-3 py-2.5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-xl"
+                        >
+                          {content}
+                        </a>
+                      ) : (
+                        <Link
+                          href={href}
+                          className="block px-3 py-2.5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-xl"
+                        >
+                          {content}
+                        </Link>
+                      )
+                    ) : (
+                      <div className="px-3 py-2.5">{content}</div>
+                    )}
                   </article>
                 );
               })}
