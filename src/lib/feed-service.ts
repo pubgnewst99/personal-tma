@@ -325,14 +325,10 @@ async function syncTodoFeedItems(): Promise<TodoFeedSyncResult> {
 
 async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
   const token = process.env.GITHUB_TOKEN;
-  const username = process.env.GITHUB_USERNAME || process.env.NEXT_PUBLIC_GITHUB_USERNAME;
-
-  if (!username) {
-    return {
-      items: [],
-      warnings: ["GitHub stars are not configured."],
-    };
-  }
+  const username =
+    process.env.GITHUB_USERNAME ||
+    process.env.NEXT_PUBLIC_GITHUB_USERNAME ||
+    "pubgnewst99";
 
   try {
     const perPage = Math.max(1, Math.min(Number(process.env.GITHUB_STARS_LIMIT || "30"), 100));
@@ -350,7 +346,9 @@ async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
     if (!response.ok) {
       return {
         items: [],
-        warnings: [`GitHub stars unavailable (${response.status}).`],
+        warnings: token
+          ? [`GitHub stars unavailable (${response.status}).`]
+          : [`GitHub stars unavailable (${response.status}). Add GITHUB_TOKEN to improve reliability.`],
       };
     }
 
