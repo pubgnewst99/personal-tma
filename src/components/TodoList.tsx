@@ -34,6 +34,41 @@ export default function TodoList({ initialState }: { initialState: TodoState }) 
         }
     };
 
+    const isUnderFinishedSection = (nodes: TodoState["parsed"], index: number): boolean => {
+        let nearestSection: string | null = null;
+        for (let i = index; i >= 0; i -= 1) {
+            const current = nodes[i];
+            if (current.type === "heading" && current.level === 2) {
+                nearestSection = current.text.toLowerCase();
+                break;
+            }
+        }
+        return Boolean(nearestSection && nearestSection.includes("finished"));
+    };
+
+    const displayNodes: TodoState["parsed"] = [];
+    const relocatedFinishedItems = state.parsed.filter((node, index) => {
+        if (node.type !== "item") return false;
+        return node.checked && !isUnderFinishedSection(state.parsed, index);
+    });
+
+    state.parsed.forEach((node, index) => {
+        if (node.type !== "item") {
+            displayNodes.push(node);
+            return;
+        }
+
+        if (node.checked && !isUnderFinishedSection(state.parsed, index)) {
+            return;
+        }
+
+        displayNodes.push(node);
+    });
+
+    const hasFinishedHeading = displayNodes.some(
+        (node) => node.type === "heading" && node.level === 2 && node.text.toLowerCase().includes("finished"),
+    );
+
     return (
         <div className="space-y-6">
             {error && (
@@ -48,16 +83,8 @@ export default function TodoList({ initialState }: { initialState: TodoState }) 
             )}
 
             <div className="space-y-4">
-                {state.parsed.map((node, index) => {
-                    let nearestSection: string | null = null;
-                    for (let i = index; i >= 0; i -= 1) {
-                        const current = state.parsed[i];
-                        if (current.type === "heading" && current.level === 2) {
-                            nearestSection = current.text.toLowerCase();
-                            break;
-                        }
-                    }
-                    const isUnderFinished = Boolean(nearestSection && nearestSection.includes("finished"));
+                {displayNodes.map((node, index) => {
+                    const isUnderFinished = isUnderFinishedSection(displayNodes, index);
 
                     if (node.type === "heading") {
                         if (node.level === 2) {
@@ -112,6 +139,44 @@ export default function TodoList({ initialState }: { initialState: TodoState }) 
                         </motion.div>
                     );
                 })}
+
+                {relocatedFinishedItems.length > 0 && (
+                    <>
+                        {!hasFinishedHeading && (
+                            <div className="pt-8 pb-3">
+                                <h2 className="text-[11px] uppercase tracking-[0.2em] font-black text-accent mb-2">
+                                    Finished
+                                </h2>
+                                <div className="h-0.5 w-full bg-accent/10 rounded-full" />
+                            </div>
+                        )}
+                        {relocatedFinishedItems.map((node) => (
+                            <motion.div
+                                key={`${node.id}-relocated`}
+                                layout
+                                className="flex items-start gap-4 p-3 rounded-2xl transition-all hover:bg-black/5 dark:hover:bg-white/5 group opacity-40"
+                            >
+                                <button
+                                    onClick={() => handleToggle(node.id, false)}
+                                    disabled={isPending}
+                                    className="mt-0.5 flex-shrink-0 transition-transform active:scale-90 text-accent"
+                                >
+                                    <div className="bg-accent rounded-full p-0.5 shadow-sm">
+                                        <CheckCircle2 size={16} className="text-white" />
+                                    </div>
+                                </button>
+                                <div className="flex-1 pt-0.5 line-through decoration-accent/30 text-tg-hint">
+                                    <div
+                                        className="text-[15px] font-medium leading-relaxed"
+                                        style={{ marginLeft: `${(node.indent?.length || 0) * 8}px` }}
+                                    >
+                                        {node.text}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </>
+                )}
             </div>
 
             <div className="pt-4 text-[10px] text-tg-hint text-center uppercase tracking-tighter">
