@@ -319,12 +319,13 @@ async function syncTodoFeedItems(): Promise<TodoFeedSyncResult> {
 
 async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
   const token = process.env.GITHUB_TOKEN;
-  const username = process.env.GITHUB_USERNAME;
+  const username = process.env.GITHUB_USERNAME || process.env.NEXT_PUBLIC_GITHUB_USERNAME;
 
-  if (!token || !username) {
+  // GitHub stars are optional; skip silently when not configured.
+  if (!username) {
     return {
       items: [],
-      warnings: ["GitHub stars are not configured."],
+      warnings: [],
     };
   }
 
@@ -334,7 +335,7 @@ async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
       `https://api.github.com/users/${encodeURIComponent(username)}/starred?sort=created&direction=desc&per_page=${perPage}`,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
           Accept: "application/vnd.github.star+json",
           "User-Agent": "personal-tma-feed",
         },
