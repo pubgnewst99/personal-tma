@@ -65,7 +65,30 @@ export default function TodoList({ initialState }: { initialState: TodoState }) 
         displayNodes.push(node);
     });
 
-    const hasFinishedHeading = displayNodes.some(
+    const hasVisibleItemForHeading = (nodes: TodoState["parsed"], headingIndex: number): boolean => {
+        const heading = nodes[headingIndex];
+        if (!heading || heading.type !== "heading") return false;
+
+        for (let i = headingIndex + 1; i < nodes.length; i += 1) {
+            const nextNode = nodes[i];
+            if (nextNode.type === "heading") {
+                if ((nextNode.level || 0) <= (heading.level || 0)) {
+                    break;
+                }
+                continue;
+            }
+            return true;
+        }
+
+        return false;
+    };
+
+    const filteredDisplayNodes = displayNodes.filter((node, index) => {
+        if (node.type !== "heading") return true;
+        return hasVisibleItemForHeading(displayNodes, index);
+    });
+
+    const hasFinishedHeading = filteredDisplayNodes.some(
         (node) => node.type === "heading" && node.level === 2 && node.text.toLowerCase().includes("finished"),
     );
 
@@ -83,8 +106,8 @@ export default function TodoList({ initialState }: { initialState: TodoState }) 
             )}
 
             <div className="space-y-4">
-                {displayNodes.map((node, index) => {
-                    const isUnderFinished = isUnderFinishedSection(displayNodes, index);
+                {filteredDisplayNodes.map((node, index) => {
+                    const isUnderFinished = isUnderFinishedSection(filteredDisplayNodes, index);
 
                     if (node.type === "heading") {
                         if (node.level === 2) {
