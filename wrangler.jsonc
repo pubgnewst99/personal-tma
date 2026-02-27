@@ -6,6 +6,9 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "vars": {
+    "GITHUB_USERNAME": "pubgnewst99"
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
