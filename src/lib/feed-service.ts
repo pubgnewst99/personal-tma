@@ -74,7 +74,14 @@ function toSourceLabel(source: FeedSource): string {
 function buildContentSubtitle(item: ContentMetadata): string {
   const parts: string[] = [toSourceLabel(item.source)];
   if (item.folder) parts.push(item.folder);
-  if (item.tags.length > 0) parts.push(`#${item.tags[0]}`);
+  if (item.tags.length > 0) {
+    const tags = item.tags
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+      .map((tag) => `#${tag}`)
+      .join(" ");
+    if (tags) parts.push(tags);
+  }
   return parts.join(" • ");
 }
 
