@@ -15,7 +15,7 @@ function IdeaContent() {
   const [items, setItems] = useState<ContentMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<"date" | "title">("title");
+  const [sortBy, setSortBy] = useState<"date" | "title">("date");
   const [activeTag, setActiveTag] = useState<string | null>(initialTag);
   const [searchQuery, setSearchQuery] = useState("");
 
