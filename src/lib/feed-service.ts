@@ -285,7 +285,8 @@ function buildRemoteUrl(routePath: string): string {
 }
 
 async function fetchRemoteJson<T>(routePath: string): Promise<T> {
-  const response = await fetch(buildRemoteUrl(routePath));
+  const url = buildRemoteUrl(routePath);
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Remote source failed (${response.status})`);
   }
@@ -337,6 +338,7 @@ async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
     process.env.NEXT_PUBLIC_GITHUB_USERNAME ||
     "pubgnewst99";
 
+  console.log(`[FeedService] Fetching GitHub stars for ${username}...`);
   try {
     const perPage = Math.max(1, Math.min(Number(process.env.GITHUB_STARS_LIMIT || "30"), 100));
     const response = await fetch(
@@ -350,6 +352,7 @@ async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
       },
     );
 
+    console.log(`[FeedService] GitHub response: ${response.status}`);
     if (!response.ok) {
       return {
         items: [],
@@ -360,6 +363,7 @@ async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
     }
 
     const entries = (await response.json()) as GitHubStarEntry[];
+    console.log(`[FeedService] GitHub stars parsed: ${entries.length} items`);
     if (!Array.isArray(entries)) {
       return { items: [], warnings: ["GitHub stars returned an unexpected payload."] };
     }
@@ -385,7 +389,8 @@ async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
     });
 
     return { items, warnings: [] };
-  } catch {
+  } catch (error: unknown) {
+    console.error(`[FeedService] GitHub fetch error:`, error);
     return {
       items: [],
       warnings: ["GitHub stars are temporarily unavailable."],
@@ -442,17 +447,21 @@ export async function getHomeFeed(): Promise<FeedResponse> {
     }
   }
 
-  const github = await getGitHubFeedItems();
-  allItems.push(...github.items);
-  warnings.push(...github.warnings);
+  // GitHub stars are temporarily disabled in this environment to prevent response hangs.
+  // const github = await getGitHubFeedItems();
+  // allItems.push(...github.items);
+  // warnings.push(...github.warnings);
 
   if (sourceSuccess === 0 && allItems.length === 0) {
     throw new Error("No feed sources are available.");
   }
 
+
   const items = allItems
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, MAX_FEED_ITEMS);
+
+  console.log(`[FeedService] Home feed generated with ${items.length} items`);
 
   return {
     items,
