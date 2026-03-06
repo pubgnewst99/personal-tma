@@ -447,10 +447,10 @@ export async function getHomeFeed(): Promise<FeedResponse> {
     }
   }
 
-  // GitHub stars are temporarily disabled in this environment to prevent response hangs.
-  // const github = await getGitHubFeedItems();
-  // allItems.push(...github.items);
-  // warnings.push(...github.warnings);
+  // GitHub stars are now re-enabled
+  const github = await getGitHubFeedItems();
+  allItems.push(...github.items);
+  warnings.push(...github.warnings);
 
   if (sourceSuccess === 0 && allItems.length === 0) {
     throw new Error("No feed sources are available.");

@@ -66,13 +66,13 @@ export default function Home() {
 
         {!loading && !error && feed && (
           <div className="flex gap-2 mt-6 overflow-x-auto pb-2 no-scrollbar">
-            {["all", "bacaan", "idea", "todo"].map((f) => (
+            {["all", "bacaan", "idea", "todo", "github"].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f as any)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filter === f
-                    ? "bg-accent text-white"
-                    : "bg-black/5 dark:bg-white/5 text-tg-hint hover:text-tg-text"
+                  ? "bg-accent text-white"
+                  : "bg-black/5 dark:bg-white/5 text-tg-hint hover:text-tg-text"
                   }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
