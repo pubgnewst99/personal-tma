@@ -15,6 +15,27 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing path or source" }, { status: 400 });
   }
 
+  const REMOTE_API_BASE = process.env.FEED_SOURCE_API_BASE_URL;
+  if (REMOTE_API_BASE) {
+    try {
+      const remoteUrl = new URL(`/api/assets?path=${encodeURIComponent(filePath)}&source=${encodeURIComponent(source)}`, REMOTE_API_BASE);
+      const response = await fetch(remoteUrl.toString());
+      if (!response.ok) {
+        return NextResponse.json({ error: "Asset proxy failed: " + response.statusText }, { status: response.status });
+      }
+      return new NextResponse(response.body, {
+        status: response.status,
+        headers: {
+          "Content-Type": response.headers.get("Content-Type") || "application/octet-stream",
+          "Cache-Control": "public, max-age=31536000, immutable",
+        }
+      });
+    } catch (err: any) {
+      console.error("Asset proxy error:", err);
+      return NextResponse.json({ error: "Asset proxy error" }, { status: 500 });
+    }
+  }
+
   try {
     const rootDir = source === "bacaan" ? BACAAN_DIR : IDEA_DIR;
     const absolutePath = validatePath(path.join(rootDir, filePath));
