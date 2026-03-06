@@ -6,22 +6,21 @@ import { ContentMetadata } from "@/lib/indexer";
 import FileCard from "@/components/FileCard";
 import { ChevronLeft, Loader2, Search, X } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 function BacaanContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTag = searchParams.get("tag");
+  const pathname = usePathname();
 
   const [items, setItems] = useState<ContentMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"date" | "title">("date");
-  const [activeTag, setActiveTag] = useState<string | null>(initialTag);
-  const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    setActiveTag(initialTag);
-  }, [initialTag]);
+  // Sync state with URL params
+  const activeTag = searchParams.get("tag");
+  const searchQuery = searchParams.get("q") || "";
 
   useEffect(() => {
     apiClient.getContentList("bacaan")
@@ -29,6 +28,18 @@ function BacaanContent() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  const updateParams = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const allTags = Array.from(new Set(items.flatMap(item => item.tags || []))).sort();
 
@@ -89,7 +100,7 @@ function BacaanContent() {
         {allTags.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar -mx-6 px-6">
             <button
-              onClick={() => setActiveTag(null)}
+              onClick={() => updateParams({ tag: null })}
               className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium border transition-colors ${!activeTag ? "bg-accent border-accent text-white" : "border-black/10 dark:border-white/10 text-tg-hint hover:text-tg-text"}`}
             >
               All
@@ -97,7 +108,7 @@ function BacaanContent() {
             {allTags.map(tag => (
               <button
                 key={tag}
-                onClick={() => setActiveTag(tag === activeTag ? null : tag)}
+                onClick={() => updateParams({ tag: tag === activeTag ? null : tag })}
                 className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium border transition-colors ${activeTag === tag ? "bg-accent border-accent text-white" : "border-black/10 dark:border-white/10 text-tg-hint hover:text-tg-text"}`}
               >
                 #{tag}
@@ -110,14 +121,14 @@ function BacaanContent() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-tg-hint" />
           <input
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => updateParams({ q: e.target.value })}
             placeholder="Search title, summary, tags..."
             className="w-full rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 pl-9 pr-9 py-2 text-sm text-tg-text placeholder:text-tg-hint outline-none focus:ring-2 focus:ring-accent/30"
           />
           {searchQuery && (
             <button
               type="button"
-              onClick={() => setSearchQuery("")}
+              onClick={() => updateParams({ q: null })}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 text-tg-hint"
               aria-label="Clear search"
             >

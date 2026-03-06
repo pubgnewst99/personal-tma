@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 import type { FeedItem, FeedResponse } from "@/lib/feed-service";
-import { Loader2, BookOpen, Lightbulb, CheckSquare, Star } from "lucide-react";
+import { Loader2, BookOpen, Lightbulb, CheckSquare, Star, Search, X } from "lucide-react";
 
 function formatTimestamp(timestamp: number): string {
   return new Date(timestamp).toLocaleString(undefined, {
@@ -39,11 +40,18 @@ function getFeedHref(item: FeedItem): string | null {
   return null;
 }
 
-export default function Home() {
+function HomeContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
   const [feed, setFeed] = useState<FeedResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "bacaan" | "idea" | "todo">("all");
+
+  // Sync state with URL params
+  const filter = (searchParams.get("filter") as any) || "all";
+  const searchQuery = searchParams.get("q") || "";
 
   useEffect(() => {
     apiClient.getFeed()
@@ -56,6 +64,32 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
+  const updateParams = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "all" || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredItems = (feed?.items || []).filter(item => {
+    // 1. Source filter
+    if (filter !== "all" && item.source !== filter) return false;
+
+    // 2. Search query filter
+    if (normalizedQuery) {
+      const haystack = `${item.title} ${item.subtitle || ""}`.toLowerCase();
+      if (!haystack.includes(normalizedQuery)) return false;
+    }
+
+    return true;
+  });
+
   return (
     <div className="max-w-2xl mx-auto px-5 py-8">
       <header className="mb-8">
@@ -65,19 +99,42 @@ export default function Home() {
         </p>
 
         {!loading && !error && feed && (
-          <div className="flex gap-2 mt-6 overflow-x-auto pb-2 no-scrollbar">
-            {["all", "bacaan", "idea", "todo", "github"].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f as any)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filter === f
-                  ? "bg-accent text-white"
-                  : "bg-black/5 dark:bg-white/5 text-tg-hint hover:text-tg-text"
-                  }`}
-              >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-              </button>
-            ))}
+          <div className="mt-6 space-y-4">
+            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+              {["all", "bacaan", "idea", "todo", "github"].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => updateParams({ filter: f })}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filter === f
+                    ? "bg-accent text-white"
+                    : "bg-black/5 dark:bg-white/5 text-tg-hint hover:text-tg-text"
+                    }`}
+                >
+                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative">
+              <Search
+                size={14}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-tg-hint pointer-events-none"
+              />
+              <input
+                value={searchQuery}
+                onChange={(e) => updateParams({ q: e.target.value })}
+                placeholder="Search activity..."
+                className="w-full rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 pl-9 pr-9 py-2 text-sm text-tg-text placeholder:text-tg-hint outline-none focus:ring-2 focus:ring-accent/30 transition-all"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => updateParams({ q: null })}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-tg-hint transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
           </div>
         )}
       </header>
@@ -103,14 +160,14 @@ export default function Home() {
             </div>
           )}
 
-          {feed.items.filter(item => filter === "all" || item.source === filter).length === 0 ? (
-            <div className="py-20 text-center text-tg-hint text-sm">
-              No recent activity yet.
+          {filteredItems.length === 0 ? (
+            <div className="py-20 text-center text-tg-hint text-sm opacity-50 space-y-2">
+              <div className="text-3xl">📭</div>
+              <p>No activity found matching your criteria.</p>
             </div>
           ) : (
             <div className="space-y-1.5">
-              {feed.items
-                .filter((item) => filter === "all" || item.source === filter)
+              {filteredItems
                 .map((item) => {
                   const Icon = getFeedIcon(item);
                   const href = getFeedHref(item);
@@ -174,5 +231,17 @@ export default function Home() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="py-20 flex justify-center">
+        <Loader2 className="animate-spin text-accent" size={32} />
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

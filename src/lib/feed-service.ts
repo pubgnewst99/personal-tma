@@ -59,7 +59,6 @@ type GitHubStarEntry = {
   };
 };
 
-const MAX_FEED_ITEMS = 30;
 const MAX_TODO_EVENTS = 500;
 const REMOTE_API_BASE = process.env.FEED_SOURCE_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "";
 let memoryTodoFeedLog: TodoFeedLog | null = null;
@@ -340,7 +339,7 @@ async function getGitHubFeedItems(): Promise<TodoFeedSyncResult> {
 
   console.log(`[FeedService] Fetching GitHub stars for ${username}...`);
   try {
-    const perPage = Math.max(1, Math.min(Number(process.env.GITHUB_STARS_LIMIT || "30"), 100));
+    const perPage = Math.max(1, Math.min(Number(process.env.GITHUB_STARS_LIMIT || "1000"), 100));
     const response = await fetch(
       `https://api.github.com/users/${encodeURIComponent(username)}/starred?sort=created&direction=desc&per_page=${perPage}`,
       {
