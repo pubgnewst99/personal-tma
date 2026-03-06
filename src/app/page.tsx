@@ -43,6 +43,7 @@ export default function Home() {
   const [feed, setFeed] = useState<FeedResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "bacaan" | "idea" | "todo">("all");
 
   useEffect(() => {
     apiClient.getFeed()
@@ -62,6 +63,23 @@ export default function Home() {
         <p className="text-tg-hint leading-relaxed italic text-sm">
           A unified feed from Bacaan, Ideas, Todos, and GitHub stars.
         </p>
+
+        {!loading && !error && feed && (
+          <div className="flex gap-2 mt-6 overflow-x-auto pb-2 no-scrollbar">
+            {["all", "bacaan", "idea", "todo"].map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f as any)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filter === f
+                    ? "bg-accent text-white"
+                    : "bg-black/5 dark:bg-white/5 text-tg-hint hover:text-tg-text"
+                  }`}
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       {loading ? (
@@ -85,70 +103,72 @@ export default function Home() {
             </div>
           )}
 
-          {feed.items.length === 0 ? (
+          {feed.items.filter(item => filter === "all" || item.source === filter).length === 0 ? (
             <div className="py-20 text-center text-tg-hint text-sm">
               No recent activity yet.
             </div>
           ) : (
             <div className="space-y-1.5">
-              {feed.items.map((item) => {
-                const Icon = getFeedIcon(item);
-                const href = getFeedHref(item);
-                const isExternal = Boolean(href && /^https?:\/\//i.test(href));
+              {feed.items
+                .filter((item) => filter === "all" || item.source === filter)
+                .map((item) => {
+                  const Icon = getFeedIcon(item);
+                  const href = getFeedHref(item);
+                  const isExternal = Boolean(href && /^https?:\/\//i.test(href));
 
-                const content = (
-                  <div className="flex items-start gap-2">
-                    <div className="mt-0.5 rounded-lg bg-accent/10 p-1.5 text-accent">
-                      <Icon size={14} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-0.5 text-[9px] uppercase tracking-[0.08em] text-accent font-semibold">
-                        {getFeedBadge(item)}
+                  const content = (
+                    <div className="flex items-start gap-2">
+                      <div className="mt-0.5 rounded-lg bg-accent/10 p-1.5 text-accent">
+                        <Icon size={14} />
                       </div>
-                      <h2 className="text-[13px] font-semibold text-tg-text leading-snug break-words">
-                        {item.title}
-                      </h2>
-                      {item.subtitle && (
-                        <p className="mt-0.5 text-[11px] text-tg-hint break-words">
-                          {item.subtitle}
-                        </p>
-                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-0.5 text-[9px] uppercase tracking-[0.08em] text-accent font-semibold">
+                          {getFeedBadge(item)}
+                        </div>
+                        <h2 className="text-[13px] font-semibold text-tg-text leading-snug break-words">
+                          {item.title}
+                        </h2>
+                        {item.subtitle && (
+                          <p className="mt-0.5 text-[11px] text-tg-hint break-words">
+                            {item.subtitle}
+                          </p>
+                        )}
+                      </div>
+                      <time className="text-[10px] whitespace-nowrap text-tg-hint pl-1">
+                        {formatTimestamp(item.timestamp)}
+                      </time>
                     </div>
-                    <time className="text-[10px] whitespace-nowrap text-tg-hint pl-1">
-                      {formatTimestamp(item.timestamp)}
-                    </time>
-                  </div>
-                );
+                  );
 
-                return (
-                  <article
-                    key={item.id}
-                    className="rounded-xl border border-black/5 dark:border-white/10 bg-tg-secondary/55"
-                  >
-                    {href ? (
-                      isExternal ? (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="block px-3 py-2.5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-xl"
-                        >
-                          {content}
-                        </a>
+                  return (
+                    <article
+                      key={item.id}
+                      className="rounded-xl border border-black/5 dark:border-white/10 bg-tg-secondary/55"
+                    >
+                      {href ? (
+                        isExternal ? (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block px-3 py-2.5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-xl"
+                          >
+                            {content}
+                          </a>
+                        ) : (
+                          <Link
+                            href={href}
+                            className="block px-3 py-2.5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-xl"
+                          >
+                            {content}
+                          </Link>
+                        )
                       ) : (
-                        <Link
-                          href={href}
-                          className="block px-3 py-2.5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-xl"
-                        >
-                          {content}
-                        </Link>
-                      )
-                    ) : (
-                      <div className="px-3 py-2.5">{content}</div>
-                    )}
-                  </article>
-                );
-              })}
+                        <div className="px-3 py-2.5">{content}</div>
+                      )}
+                    </article>
+                  );
+                })}
             </div>
           )}
         </div>

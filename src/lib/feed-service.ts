@@ -458,8 +458,7 @@ export async function getHomeFeed(): Promise<FeedResponse> {
 
 
   const items = allItems
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, MAX_FEED_ITEMS);
+    .sort((a, b) => b.timestamp - a.timestamp);
 
   console.log(`[FeedService] Home feed generated with ${items.length} items`);
 
