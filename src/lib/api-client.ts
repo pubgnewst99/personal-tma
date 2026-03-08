@@ -133,6 +133,7 @@ export const apiClient = {
     const url = new URL(`${API_BASE}/api/assets`, typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
     url.searchParams.set("path", filePath);
     url.searchParams.set("source", source);
+    url.searchParams.set("v", "2");
     return url.toString();
   }
 };
