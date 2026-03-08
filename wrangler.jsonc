@@ -8,7 +8,8 @@
   ],
   "vars": {
     "GITHUB_USERNAME": "pubgnewst99",
-    "FEED_SOURCE_API_BASE_URL": "https://instance-20260303-122336.tail1838c2.ts.net"
+    "FEED_SOURCE_API_BASE_URL": "https://instance-20260303-122336.tail1838c2.ts.net",
+    "NEXT_PUBLIC_API_BASE_URL": "https://personal-tma.pubgnewst99.workers.dev"
   },
   "assets": {
     "directory": ".open-next/assets",
