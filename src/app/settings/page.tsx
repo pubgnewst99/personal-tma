@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useTabs } from "@/hooks/useTabs";
 import { isValidExternalUrl } from "@/lib/open-external-link";
-import { ChevronLeft, Trash2, Globe, Plus, AlertCircle } from "lucide-react";
+import { ChevronLeft, Trash2, Globe, Plus, AlertCircle, Pin } from "lucide-react";
 import Link from "next/link";
 
 export default function SettingsPage() {
-    const { customTabs, addCustomTab, removeCustomTab } = useTabs();
+    const { customTabs, addCustomTab, removeCustomTab, togglePinCustomTab } = useTabs();
     const [name, setName] = useState("");
     const [url, setUrl] = useState("https://");
     const [error, setError] = useState<string | null>(null);
@@ -125,13 +125,23 @@ export default function SettingsPage() {
                                         <p className="text-xs text-tg-hint truncate">{tab.url}</p>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => removeCustomTab(tab.id)}
-                                    className="p-2 text-tg-hint hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0"
-                                    title="Remove tab"
-                                >
-                                    <Trash2 size={18} />
-                                </button>
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                    <button
+                                        onClick={() => togglePinCustomTab(tab.id)}
+                                        className={`p-2 rounded-lg transition-colors ${tab.isPinned ? "text-accent bg-accent/10" : "text-tg-hint hover:text-accent hover:bg-accent/10"}`}
+                                        title={tab.isPinned ? "Unpin tab" : "Pin tab"}
+                                    >
+                                        <Pin size={18} fill={tab.isPinned ? "currentColor" : "none"} />
+                                    </button>
+                                    <button
+                                        onClick={() => !tab.isPinned && removeCustomTab(tab.id)}
+                                        disabled={tab.isPinned}
+                                        className={`p-2 rounded-lg transition-colors flex-shrink-0 ${tab.isPinned ? "text-tg-hint opacity-30 cursor-not-allowed" : "text-tg-hint hover:text-red-500 hover:bg-red-500/10"}`}
+                                        title={tab.isPinned ? "Unpin to remove" : "Remove tab"}
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>

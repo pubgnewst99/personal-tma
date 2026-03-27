@@ -102,9 +102,19 @@ export function useTabs() {
         dispatchUpdate();
     };
 
+    const togglePinCustomTab = async (id: string) => {
+        const updated = customTabs.map(t => 
+            t.id === id ? { ...t, isPinned: !t.isPinned } : t
+        );
+        setCustomTabs(updated);
+        await tmaStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        dispatchUpdate();
+    };
+
     return {
         customTabs,
         addCustomTab,
         removeCustomTab,
+        togglePinCustomTab,
     };
 }
