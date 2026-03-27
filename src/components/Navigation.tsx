@@ -51,19 +51,22 @@ export default function Navigation() {
                     })}
 
                     {visibleCustomTabs.map((tab) => {
+                        const targetUrl = `/app-viewer?id=${tab.id}&name=${encodeURIComponent(tab.name)}&url=${encodeURIComponent(tab.url)}`;
+                        const isActive = pathname === "/app-viewer" && (typeof window !== "undefined" ? window.location.search.includes(`id=${tab.id}`) : false);
+                        
                         return (
-                            <button
+                            <Link
                                 key={tab.id}
-                                onClick={() => openExternalLink(tab.url)}
-                                className="flex flex-col items-center gap-1 transition-colors min-w-[60px] flex-shrink-0 text-tg-hint hover:text-tg-text"
+                                href={targetUrl}
+                                className={`flex flex-col items-center gap-1 transition-colors min-w-[60px] flex-shrink-0 ${isActive ? "text-accent" : "text-tg-hint hover:text-tg-text"}`}
                             >
-                                <div className="p-1.5 rounded-xl transition-all">
-                                    <Globe size={24} strokeWidth={2} />
+                                <div className={`p-1.5 rounded-xl transition-all ${isActive ? "bg-accent/10" : ""}`}>
+                                    <Globe size={24} strokeWidth={isActive ? 2.5 : 2} />
                                 </div>
                                 <span className="text-[10px] font-semibold uppercase tracking-wider truncate max-w-[56px]" title={tab.name}>
                                     {tab.name}
                                 </span>
-                            </button>
+                            </Link>
                         );
                     })}
                 </div>
