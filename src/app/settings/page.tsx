@@ -81,7 +81,11 @@ export default function SettingsPage() {
                     <button
                         onClick={handleAddTab}
                         disabled={customTabs.length >= 5}
-                        className="w-full mt-2 flex items-center justify-center gap-2 bg-accent text-white rounded-xl py-3 text-sm font-bold shadow-sm hover:bg-opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold shadow-sm hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ 
+                            backgroundColor: "var(--tg-theme-button-color, #2481cc)", 
+                            color: "var(--tg-theme-button-text-color, #ffffff)" 
+                        }}
                     >
                         <Plus size={18} />
                         Add Tab
