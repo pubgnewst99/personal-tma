@@ -19,6 +19,7 @@ export default function ContentPage() {
   const id = params?.id;
   const [contentItem, setContentItem] = useState<ContentItem | null>(null);
   const [renderedContent, setRenderedContent] = useState<string>("");
+  const [relatedItems, setRelatedItems] = useState<{id: string; title: string; source: string; similarity: number}[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +45,10 @@ export default function ContentPage() {
         );
 
         setContentItem(item);
+
+        apiClient.getRelatedContent(id)
+          .then(setRelatedItems)
+          .catch(e => console.error("Failed loading related:", e));
 
         const processedContent = await remark()
           .use(remarkParse)
@@ -128,6 +133,28 @@ export default function ContentPage() {
         className="markdown-body markdown-preview"
         dangerouslySetInnerHTML={{ __html: renderedContent }}
       />
+      
+      {relatedItems.length > 0 && (
+        <div className="mt-16 pt-8 border-t border-black/10 dark:border-white/10">
+          <h3 className="text-lg font-bold text-tg-text mb-6">Related Articles</h3>
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {relatedItems.map(item => (
+              <Link
+                key={item.id}
+                href={`/content/${item.id}`}
+                className="block p-4 rounded-2xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                title={`${Math.round(item.similarity * 100)}% match`}
+              >
+                <div className="text-[10px] items-center gap-1.5 flex text-accent font-black uppercase tracking-wider mb-2">
+                  <Tag size={12} />
+                  {item.source}
+                </div>
+                <div className="text-sm font-semibold text-tg-text leading-snug line-clamp-2">{item.title}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -114,6 +114,10 @@ export const apiClient = {
       metadata: normalizeContentMetadata(detail.metadata),
     };
   },
+
+  getRelatedContent: async (id: string) => {
+    return apiFetch<{ id: string; title: string; source: string; similarity: number }[]>(`/api/content/${id}/related`);
+  },
   
   getTodos: () => 
     apiFetch<TodoState>("/api/todos"),
