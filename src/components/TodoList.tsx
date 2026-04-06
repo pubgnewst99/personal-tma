@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Circle, AlertCircle } from "lucide-react";
+import { CheckCircle2, Circle, AlertCircle, Search } from "lucide-react";
 import { TodoState } from "@/lib/todo-service";
 import { apiClient } from "@/lib/api-client";
 
@@ -14,6 +14,7 @@ export default function TodoList({ initialState }: { initialState: TodoState }) 
     const [state, setState] = useState(initialState);
     const [isPending] = useTransition();
     const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const handleToggle = async (id: number, checked: boolean) => {
         setError(null);
@@ -46,15 +47,29 @@ export default function TodoList({ initialState }: { initialState: TodoState }) 
         return Boolean(nearestSection && nearestSection.includes("finished"));
     };
 
+    const searchLower = searchQuery.toLowerCase();
+    
+    // Filter items based on search query
+    const itemMatchesSearch = (node: TodoState["parsed"][0]) => {
+        if (!searchLower) return true;
+        if (node.type !== "item") return true; 
+        return node.text.toLowerCase().includes(searchLower);
+    };
+
     const displayNodes: TodoState["parsed"] = [];
     const relocatedFinishedItems = state.parsed.filter((node, index) => {
         if (node.type !== "item") return false;
+        if (!itemMatchesSearch(node)) return false;
         return node.checked && !isUnderFinishedSection(state.parsed, index);
     });
 
     state.parsed.forEach((node, index) => {
         if (node.type !== "item") {
             displayNodes.push(node);
+            return;
+        }
+
+        if (!itemMatchesSearch(node)) {
             return;
         }
 
@@ -94,6 +109,17 @@ export default function TodoList({ initialState }: { initialState: TodoState }) 
 
     return (
         <div className="space-y-6">
+            <div className="relative">
+                <input 
+                    type="text" 
+                    placeholder="Search tasks..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-2xl px-4 py-3.5 pl-[42px] text-[15px] outline-none focus:ring-2 focus:ring-accent/50 text-tg-text placeholder:text-tg-hint/70 transition-all"
+                />
+                <Search className="absolute left-4 top-[15px] text-tg-hint opacity-70" size={18} />
+            </div>
+
             {error && (
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
